@@ -5,7 +5,7 @@ monitoring the varaible Kiel and the Inclined position (Krängung).
 For the Voltage regulation use the Pololu 5V, 1A Step-Down Voltage Regulator D24V10F5.
 
 The Website use SPIFFS Filesystem. You must use Partition Schemes "Minimal SPIFFS with APPS and OTA".
-The HTML Data upload seperately with "ESP 32 Scetch Data upload" from /data directory.
+The HTML Data upload separately with "ESP 32 Scetch Data upload" from /data directory.
 
 ![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/photo_2020-10-27_21-42-18.jpg)
 
