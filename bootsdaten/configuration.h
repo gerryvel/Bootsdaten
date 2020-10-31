@@ -14,6 +14,7 @@
 #define AP_SSID      "Bootsdaten"
 #define AP_PASSWORD  "12345678"
 #define HostName     "Bootsdaten"
+
 // Variables for AP
 IPAddress IP = IPAddress(192, 168, 16, 1);
 IPAddress Gateway = IPAddress(192, 168, 16, 1);
@@ -36,6 +37,8 @@ bool bClientConnected = 0;
 const int iMaxSonar = 34;			//Analoginput 
 int iDistance = 0;
 float fSStellung = 0;
+float fOffset = 30;
+float fAbsTief = 0;
 float fKraengung = 0;
 float fGaugeKraengung = 0;
 String sOrient = "";
@@ -48,5 +51,10 @@ String sSTBB = "";
 #define TCP_PORT 6666						//Port Windmeser Nowa
 #define DNS_PORT 53
 
+//Confuguration SPIFFS
+int SPIFFbytes = 0;
+
+//Boardinfo
+u32_t iFreeHeap = 0;
 
 #endif

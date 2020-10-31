@@ -17,6 +17,7 @@
 #include <Wire.h>
 #include "Analog.h"
 #include <SPIFFS.h>
+#include <Preferences.h>
 
 // Set web server port number to 80
 AsyncWebServer server(80);
@@ -24,6 +25,9 @@ AsyncWebServer server(80);
 // Info Board for HTML-Output
 String sBoardInfo;
 BoardInfo boardInfo;
+
+//NVS
+Preferences prefs;
 
 //Gyro
 MMA8452Q mma;
@@ -37,6 +41,10 @@ String replaceVariable(const String& var)
 	if (var == "sSTBB")return sSTBB;
 	if (var == "sBoardInfo")return sBoardInfo;
 	if (var == "AP_IP")return AP_IP.toString();
+	if (var == "sSPIFFbytes")return String(SPIFFbytes);
+	if (var == "sFreeHeapspace")return String(iFreeHeap);
+	if (var == "sAbsTief")return String(fAbsTief);
+	if (var == "sOffset")return String(fOffset);
 }
 
 // The setup() function runs once each time the micro-controller starts
@@ -49,14 +57,14 @@ void setup()
 		Serial.println("An Error has occurred while mounting SPIFFS");
 		return;
 	}
-	Serial.println("Speicher SPIFFS benutzt:");
-	Serial.println(SPIFFS.usedBytes());
+	SPIFFbytes = (SPIFFS.usedBytes());
 
 	File root = SPIFFS.open("/");
-
 	listDir("/");
 
 	sBoardInfo = boardInfo.ShowChipIDtoString();
+
+	prefs.begin("nvs", false);
 
 	LEDinit();
 	pinMode(iMaxSonar, INPUT);
@@ -108,8 +116,14 @@ void setup()
 	server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
 		request->send(SPIFFS, "/index.html", String(), false, replaceVariable);
 	});
+	server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest* request) {
+		request->send(SPIFFS, "/favicon.ico");
+	});
 	server.on("/system.html", HTTP_GET, [](AsyncWebServerRequest* request) {
 		request->send(SPIFFS, "/system.html", String(), false, replaceVariable);
+	});
+	server.on("/settings.html", HTTP_GET, [](AsyncWebServerRequest* request) {
+		request->send(SPIFFS, "/settings.html", String(), false, replaceVariable);
 	});
 	server.on("/ueber.html", HTTP_GET, [](AsyncWebServerRequest* request) {
 		request->send(SPIFFS, "/ueber.html", String(), false, replaceVariable);
@@ -207,8 +221,11 @@ void loop()
 	int Err = 0;
 	fSStellung = analogInScale(iDistance, 4000, 220, 400.0, 30.0, Err);
 	Serial.printf("Schwert: %f cm", fSStellung);
+	fAbsTief = fSStellung + fOffset;
 
 	freeHeapSpace();
+	int Feldstaerke = WiFi.RSSI;
+	Serial.printf("Feldstärke: %i %",Feldstaerke);
 }
 
 
