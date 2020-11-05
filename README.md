@@ -7,12 +7,12 @@ For the Voltage regulation use the Pololu 5V, 1A Step-Down Voltage Regulator D24
 The Website use SPIFFS Filesystem. You must use Partition Schemes "Minimal SPIFFS with APPS and OTA".
 The HTML Data upload separately with "ESP 32 Scetch Data upload" from /data directory.
 
+![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/photo_2020-10-27_21-42-25.jpg)
+
+![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/photo_2020-10-27_21-46-59.jpg)
+
 ![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/photo_2020-10-31_02-03-36.jpg)
 
 ![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/photo_2020-10-31_02-03-42.jpg)
 
 ![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/photo_2020-10-31_02-03-47.jpg)
-
-![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/photo_2020-10-27_21-42-52.jpg)
-
-![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/photo_2020-10-27_21-46-59.jpg)
