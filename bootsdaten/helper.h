@@ -16,6 +16,7 @@ Helper is a collection of small "Helferlein"
 #include <SPIFFS.h>
 #include <FS.h>
 #include "configuration.h"
+#include <ArduinoJson.h>
 
 void ShowTime()
 {
@@ -33,6 +34,7 @@ void freeHeapSpace()
 	if (millis() - last > 5000) {
 		last = millis();
 		Serial.printf("\n[MAIN] Free heap: %d bytes\n", ESP.getFreeHeap());
+		iFreeHeap = ESP.getFreeHeap();
 	}
 }
 
@@ -57,7 +59,6 @@ void WiFiDiag(void) {
 }
 
 
-
 void listDir(char * dir) {
 
 	File root = SPIFFS.open(dir);
@@ -71,5 +72,82 @@ void listDir(char * dir) {
 		file = root.openNextFile();
 	}
 }
+
+
+void readConfig(String filename) {
+	StaticJsonDocument<200> testDocument;
+	File configFile = SPIFFS.open(filename);
+	if (configFile)
+	{
+		Serial.println("opened config file");
+		DeserializationError error = deserializeJson(testDocument, configFile);
+
+		// Test if parsing succeeds.
+		if (error)
+		{
+			Serial.print(F("deserializeJson() failed: "));
+			Serial.println(error.f_str());
+			return;
+		}
+
+		Serial.println("deserializeJson ok");
+		{
+			Serial.println("Lese Daten aus Config - Datei");
+			strcpy(AP_Config.AP_SSID, testDocument["SSID"] | "Bootsdaten");
+			strcpy(AP_Config.AP_IP, testDocument["IP"] | "192.168.16.1");
+			strcpy(AP_Config.AP_Password, testDocument["Password"] | "12345678");
+			strcpy(AP_Config.Kiel_Offset, testDocument["Kiel_Offset"] | "70.0");
+			Serial.println(AP_Config.AP_SSID);
+		}
+		configFile.close();
+		Serial.println("Config - Datei geschlossen");
+	}
+
+	else
+	{
+		Serial.println("failed to load json config");
+	}
+}
+
+
+bool writeConfig(String json)
+{
+	Serial.println(json);
+
+	Serial.println("neue Konfiguration speichern");
+
+	File configFile = SPIFFS.open("/config.json", FILE_WRITE);
+	if (configFile)
+	{
+		Serial.println("Config - Datei öffnen");
+		File configFile = SPIFFS.open("/config.json", FILE_WRITE);
+		if (configFile)
+		{
+			Serial.println("Config - Datei zum Schreiben geöffnet");
+			StaticJsonDocument<200> testDocument;
+			Serial.println("JSON - Daten übergeben");
+			DeserializationError error = deserializeJson(testDocument, json);
+			// Test if parsing succeeds.
+			if (error)
+			{
+				Serial.print(F("deserializeJson() failed: "));
+				Serial.println(error.f_str());
+				// bei Memory - Fehler den <Wert> in StaticJsonDocument<200> testDocument; erhöhen
+				return false;
+			}
+			Serial.println("Konfiguration schreiben...");
+			serializeJson(testDocument, configFile);
+			Serial.println("Konfiguration geschrieben...");
+
+			// neue Config in Serial ausgeben zur Kontrolle
+			serializeJsonPretty(testDocument, Serial);
+
+			Serial.println("Config - Datei geschlossen");
+			configFile.close();
+		}
+	}
+	return true;
+}
+
 
 #endif

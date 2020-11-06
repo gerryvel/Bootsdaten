@@ -18,6 +18,8 @@
 #include "Analog.h"
 #include <SPIFFS.h>
 #include <Preferences.h>
+#include <ArduinoJson.h>
+#include <fs.h>
 
 // Set web server port number to 80
 AsyncWebServer server(80);
@@ -44,8 +46,62 @@ String replaceVariable(const String& var)
 	if (var == "sSPIFFbytes")return String(SPIFFbytes);
 	if (var == "sFreeHeapspace")return String(iFreeHeap);
 	if (var == "sAbsTief")return String(fAbsTief);
-	if (var == "sOffset")return String(fOffset);
+	if (var == "sOffset")return String(AP_Config.Kiel_Offset);
+	if (var == "CONFIGPLACEHOLDER")return processor(var);
 }
+
+String processor(const String& var)
+{
+	if (var == "CONFIGPLACEHOLDER")
+	{
+		String buttons = "";
+		buttons += "<form onSubmit = \"event.preventDefault(); formToJson(this);\">";
+		buttons += "<p class=\"CInput\"><label>SSID </label><input type = \"text\" name = \"SSID\" value=\"";
+		buttons += AP_Config.AP_SSID;
+		buttons += "\"/></p>";
+		buttons += "<p class=\"CInput\"><label>IP </label><input type = \"text\" name = \"IP\" value=\"";
+		buttons += AP_Config.AP_IP;
+		buttons += "\"/></p>";
+		buttons += "<p class=\"CInput\"><label>Password </label><input type = \"text\" name = \"Password\" value=\"";
+		buttons += AP_Config.AP_Password;
+		buttons += "\"/></p>";
+		buttons += "<p class=\"CInput\"><label>Kieloffset </label><input type = \"text\" name = \"Kiel_Offset\" value=\"";
+		buttons += AP_Config.Kiel_Offset;
+		buttons += "\"/> cm</p>";
+		buttons += "<p><input type=\"submit\" value=\"Speichern\"></p>";
+		buttons += "</form>";
+		return buttons;
+	}
+	return String();
+}
+
+/*
+String processor(const String& var)
+{
+	if (var == "SETUPPLACEHOLDER")
+	{
+		String buttons = "";
+		buttons += "<form onSubmit = \"event.preventDefault(); formToJson(this);\">";
+		buttons += "<p><label class=\"label\">SSID</label>";
+		buttons += "<input type = \"text\" name = \"ssid\" value=\"";
+		buttons += AP_Config.AP_SSID;
+		buttons += "\"/></p>";
+		buttons += "<p><label class=\"label\">IP</label>";
+		buttons += "<input type = \"text\" name = \"hostname\" value=\"";
+		buttons += AP_Config.AP_IP;
+		buttons += "\"/></p>";
+		buttons += "<p><label>Password</label>";
+		buttons += "<input type = \"text\" name = \"pass\" value=\"";
+		buttons += AP_Config.AP_Password;
+		buttons += "\"/></p>";
+		buttons += "<p><input type=\"submit\" value=\"Speichern\"></p>";
+		buttons += "</form>";
+		return buttons;
+	}
+	return String();
+}
+*/
+
 
 // The setup() function runs once each time the micro-controller starts
 void setup()
@@ -61,6 +117,9 @@ void setup()
 
 	File root = SPIFFS.open("/");
 	listDir("/");
+
+	//file exists, reading and loading config file
+	readConfig("/config.json");
 
 	sBoardInfo = boardInfo.ShowChipIDtoString();
 
@@ -86,16 +145,18 @@ void setup()
 	}
 	
 	//WIFI
-	if (!WiFi.setHostname(HostName))
+	if (!WiFi.setHostname(AP_Config.AP_SSID))
 		Serial.println("\nSet Hostname success");
 	else
 		Serial.println("\nSet Hostname not success");
 
 	//WiFiServer AP starten
 	WiFi.mode(WIFI_AP_STA);
-	WiFi.softAP(AP_SSID, AP_PASSWORD);
+	WiFi.softAP(AP_Config.AP_SSID, AP_Config.AP_Password);
 	delay(1000);
-	if (WiFi.softAPConfig(IP, Gateway, NMask))
+	IPAddress ip;
+	ip.fromString(AP_Config.AP_IP);
+	if (WiFi.softAPConfig(ip, ip, NMask))
 		Serial.println("\nIP config success");	
 	else
 		Serial.println("IP config not success");	
@@ -133,6 +194,24 @@ void setup()
 	});
 	server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
 		request->send(SPIFFS, "/style.css", "text/css");
+	});
+	server.on("/settings.html", HTTP_POST, [](AsyncWebServerRequest *request)
+	{
+		int count = request->params();
+		Serial.printf("Anzahl: %i\n", count);
+		for (int i = 0;i < count;i++)
+		{
+			AsyncWebParameter* p = request->getParam(i);
+			Serial.print("PWerte von der Internet - Seite: ");
+			Serial.print("Param name: ");
+			Serial.println(p->name());
+			Serial.print("Param value: ");
+			Serial.println(p->value());
+			Serial.println("------");
+			// p->value in die config schreiben
+			writeConfig(p->value());
+		}
+		request->send(200, "text/plain", "Daten gespeichert");
 	});
 
 	// Start TCP (HTTP) server
@@ -221,11 +300,9 @@ void loop()
 	int Err = 0;
 	fSStellung = analogInScale(iDistance, 4000, 220, 400.0, 30.0, Err);
 	Serial.printf("Schwert: %f cm", fSStellung);
-	fAbsTief = fSStellung + fOffset;
+	fAbsTief = fSStellung + atof(AP_Config.Kiel_Offset);
 
 	freeHeapSpace();
-	int Feldstaerke = WiFi.RSSI;
-	Serial.printf("Feldstärke: %i %",Feldstaerke);
 }
 
 

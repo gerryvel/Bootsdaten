@@ -11,9 +11,15 @@
 #define PAGE_REFRESH 10 
 
 //Configuration AP 
-#define AP_SSID      "Bootsdaten"
-#define AP_PASSWORD  "12345678"
-#define HostName     "Bootsdaten"
+struct AP_config
+{
+	char AP_IP[20];
+	char AP_SSID[64];
+	char AP_Password[12];
+	char Kiel_Offset[5];
+};
+AP_config AP_Config;
+
 
 // Variables for AP
 IPAddress IP = IPAddress(192, 168, 16, 1);
@@ -37,7 +43,7 @@ bool bClientConnected = 0;
 const int iMaxSonar = 34;			//Analoginput 
 int iDistance = 0;
 float fSStellung = 0;
-float fOffset = 30;
+//float fOffset = 30;
 float fAbsTief = 0;
 float fKraengung = 0;
 float fGaugeKraengung = 0;
