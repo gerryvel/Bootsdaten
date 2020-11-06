@@ -9,10 +9,10 @@ The HTML Data upload separately with "ESP 32 Scetch Data upload" from /data dire
 
 ![Schaltplan PDF](https://github.com/gerryvel/Bootsdaten/blob/master/ESP32%20Bootselektronik.pdf)
 
-![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/photo_2020-10-27_21-42-25.jpg)
+![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/Zwischenablage01.jpg)
 
-![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/photo_2020-10-31_02-03-36.jpg)
+![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/Zwischenablage02.jpg)
 
-![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/photo_2020-10-31_02-03-42.jpg)
+![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/Zwischenablage03.jpg)
 
-![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/photo_2020-10-31_02-03-47.jpg)
+![Schematics](https://github.com/gerryvel/Bootsdaten/blob/main/Zwischenablage04.jpg)
