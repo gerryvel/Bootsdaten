@@ -29,7 +29,7 @@ from /data directory.
 
 ![grafik](https://github.com/gerryvel/Bootsdaten/assets/17195231/5571a0f5-8a37-4b18-a9da-5ba11bb2f8b1)
 
-# PCB and case
+# PCB and Housing assembly
 
 ![photo_2023-07-20_13-50-08](https://github.com/gerryvel/Bootsdaten/assets/17195231/ef5a9be6-c718-4481-8ee6-a68689e1808c)
 
