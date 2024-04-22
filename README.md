@@ -21,7 +21,7 @@ from /data directory.
 - SN65HVD230 [Link](https://www.reichelt.de/high-speed-can-transceiver-1-mbit-s-3-3-v-so-8-sn-65hvd230d-p58427.html?&trstct=pos_0&nbc=1)
 - Traco-Power TSR 1-2450 for 12V / 5V [Link](https://www.reichelt.de/dc-dc-wandler-tsr-1-1-w-5-v-1000-ma-sil-to-220-tsr-1-2450-p116850.html?search=tsr+1-24)
 - Gyro MMA8452Q [Link](https://www.reichelt.de/entwicklerboards-beschleunigungsmesser-board-mma8452q-debo-sens-acc3-p284397.html)
-- Case Wago 789
+- Case Wago 789 [Link](https://www.conrad.de/de/p/wago-789-905-hutschienen-gehaeuse-90-x-17-5-x-55-polyamid-6-6-grau-1-set-530120.html)
 - Resistor 200Ohm , 10kOhm
 
 
@@ -29,7 +29,7 @@ from /data directory.
 
 ![grafik](https://github.com/gerryvel/Bootsdaten/assets/17195231/5571a0f5-8a37-4b18-a9da-5ba11bb2f8b1)
 
-# PCB and case
+# PCB and Housing assembly
 
 ![photo_2023-07-20_13-50-08](https://github.com/gerryvel/Bootsdaten/assets/17195231/ef5a9be6-c718-4481-8ee6-a68689e1808c)
 
