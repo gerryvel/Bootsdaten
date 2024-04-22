@@ -9,6 +9,10 @@ int NodeAddress;                     // To store Last Node Address
 uint8_t chipid[6];
 uint32_t id = 0;
 int i = 0;
+#define PGN1SendOffset 0
+#define PGN2endOffset 40
+#define PGN3SendOffset 80
+#define BPGN4SendOffset 100
 #define SlowDataUpdatePeriod 1000  // Time between CAN Messages sent
 
 //Configuration Web Page 
@@ -58,16 +62,18 @@ float fbmp_altitude = 0;
 String sI2C_Status = "";
 bool bI2C_Status = 0;
 
+double fKraengung = 0;				//MMA
+float fGaugeKraengung = 0;
+double fGieren = 0;
+String sSTBB = "";
+String sOrient = "";
+
 const int iMaxSonar = 35;			//Analoginput 
 int iDistance = 0;
-
-float fKraengung = 0;
-float fGaugeKraengung = 0;
 float fSStellung = 0;
 float fAbsTief = 0;
 float fKielOffset = 0;
-String sSTBB = "";
-String sOrient = "";
+
 
 //Definiton NMEA0183 MWV
 double dMWV_WindDirectionT = 0;

@@ -1,7 +1,7 @@
 /*
     Name:       bootsdaten.ino
     Created:	22.10.2020
-	Update: 	08.04.2023
+	Update: 	26.09.2023
     Author:     astec-PG\gerryadmin
 */
 
@@ -93,11 +93,12 @@ void SendNMEA0183Message(String var) {
 }
 
 // Set the information for other bus devices, which messages we support
-const unsigned long TransmitMessages[] PROGMEM = {127257L, // Pitch/Roll                                              
+const unsigned long TransmitMessages[] PROGMEM = {127257L, // Yaw,Pitch,Roll                                              
                                                   0
                                                  };
 
-bool IsTimeToUpdate(unsigned long NextUpdate) {
+
+	bool IsTimeToUpdate(unsigned long NextUpdate) {
   		return (NextUpdate < millis());
 	}
 	unsigned long InitNextUpdate(unsigned long Period, unsigned long Offset = 0) {
@@ -107,18 +108,17 @@ bool IsTimeToUpdate(unsigned long NextUpdate) {
   		while ( NextUpdate < millis() ) NextUpdate += Period;
 	}
 
-// Create NMEA2000 message
-void SendN2kPitch(double Yaw, double Pitch, double Roll) {   // Gieren //Krängung // Schlingern
-static unsigned long SlowDataUpdated = InitNextUpdate(SlowDataUpdatePeriod);				
-tN2kMsg N2kMsg;
+	// Create NMEA2000 message
+	void SendN2kPitch(double Pitch) {   //sende Krängung
+	static unsigned long SlowDataUpdated = InitNextUpdate(SlowDataUpdatePeriod);				
+	tN2kMsg N2kMsg;
 
   	if ( IsTimeToUpdate(SlowDataUpdated) ) {
     	SetNextUpdate(SlowDataUpdated, SlowDataUpdatePeriod);
 
-    	Serial.printf("Krängung     : %3.0f ", Pitch);
-    	Serial.println("°");
+    	Serial.printf("Krängung: %3.1f °\n",Pitch);
 
-  		SetN2kPGN127257(N2kMsg, 0, Yaw, Pitch, Roll); 
+  		SetN2kPGN127257(N2kMsg, 0, N2kDoubleNA, Pitch, N2kDoubleNA); 
   		NMEA2000.SendMsg(N2kMsg);
 		}
 }
@@ -244,8 +244,6 @@ void setup()
 		request->send(200, "text/plain", "Daten gespeichert");
 	});
 
-
-
 	// Start TCP (HTTP) server
 	server.begin();
 	Serial.println("TCP server started");
@@ -262,30 +260,29 @@ void setup()
   	for (i = 0; i < 6; i++) id += (chipid[i] << (7 * i));
 
   	// Set product information
-  	NMEA2000.SetProductInformation("1", // Manufacturer's Model serial code
+  	NMEA2000.SetProductInformation("BD01", // Manufacturer's Model serial code
                                  100, // Manufacturer's product code
-                                 "BoatData Sensor Module",  // Manufacturer's Model ID
-                                 "1.0.2.25 (2023-05-30)",  // Manufacturer's Software version code
-                                 "1.0.2.0 (2023-05-30)" // Manufacturer's Model version
+                                 "BD Sensor Module",  // Manufacturer's Model ID
+                                 "1.0.3.00 (2023-09-30)",  // Manufacturer's Software version code
+                                 "1.0.3.0 (2023-09-30)" // Manufacturer's Model version
                                 );
   	// Set device information
-  	NMEA2000.SetDeviceInformation(id, // Unique number. Use e.g. Serial number.
-                                132, // Device function=Analog to NMEA 2000 Gateway. See codes on http://www.nmea.org/Assets/20120726%20nmea%202000%20class%20&%20function%20codes%20v%202.00.pdf
-                                25, // Device class=Inter/Intranetwork Device. See codes on  http://www.nmea.org/Assets/20120726%20nmea%202000%20class%20&%20function%20codes%20v%202.00.pdf
+  	NMEA2000.SetDeviceInformation(01, // Unique number. Use e.g. Serial number.
+                                180, // 180 Device function=Attitude (Pitch, Roll, Yaw) Control. See codes on http://www.nmea.org/Assets/20120726%20nmea%202000%20class%20&%20function%20codes%20v%202.00.pdf
+                                40, // 40 Device class=Steering and Control Surfaces. See codes on  http://www.nmea.org/Assets/20120726%20nmea%202000%20class%20&%20function%20codes%20v%202.00.pdf
                                 2046 // Just choosen free from code list on http://www.nmea.org/Assets/20121020%20nmea%202000%20registration%20list.pdf
                                );
 
 	NMEA2000.SetForwardType(tNMEA2000::fwdt_Text); // Show in clear text. Leave uncommented for default Actisense format.
 
   	preferences.begin("nvs", false);                          // Open nonvolatile storage (nvs)
-  	NodeAddress = preferences.getInt("LastNodeAddress", 33);  // Read stored last NodeAddress, default 33
+  	NodeAddress = preferences.getInt("LastNodeAddress", 34);  // Read stored last NodeAddress, default 33
   	preferences.end();
   	Serial.printf("NodeAddress=%d\n", NodeAddress);
 
   	NMEA2000.SetMode(tNMEA2000::N2km_ListenAndNode, NodeAddress);
   	NMEA2000.ExtendTransmitMessages(TransmitMessages);
   	NMEA2000.Open();
-
 
 	ArduinoOTA
 		.onStart([]() {
@@ -336,12 +333,13 @@ void loop()
   Serial.printf("Soft-AP IP address = %s\n", WiFi.softAPIP().toString());
   sCL_Status = sWifiStatus(WiFi.status());
 
-// read MMA, use only x for Kraengung (Pitch)
-	Serial.printf("X: %f °\n", mma.getX() / 11.377);
+// read MMA, use x for Kraengung (Roll), y for Gieren (Pitch)
 	fKraengung = mma.getX() / 11.377;
 	fKraengung = (abs(fKraengung));
 	fGaugeKraengung = mma.getX() / 11.377;
-	Serial.printf("Y: %f °\n", mma.getY() / 11.377);
+	fGieren = mma.getY() / 11.377;
+	Serial.printf("X, Krängung: %f °\n", fKraengung);
+	Serial.printf("Y, Gieren: %f °\n", fGieren);
 	Serial.printf("Z: %f °\n", mma.getZ() / 11.377);
 
 	// Direction Kraengung
@@ -401,7 +399,17 @@ void loop()
 // Send Messages NMEA
 	SendNMEA0183Message(sendXDR()); // Send NMEA0183 Message
 
-	SendN2kPitch(0, fKraengung, 0); // Send NMEA2000 Message
+delay(200);
+
+// Daten für N2k
+Serial.print("Daten für N2k:");
+Serial.printf("Krängung: %3.0f °, Gieren: %3.0f °\n", fKraengung, fGieren);
+Serial.print("SendN2kPitch............\n");
+
+SendN2kPitch(fKraengung); // Send NMEA2000 Message
+
+delay(200);
+Serial.print("NMEA2000.ParseMessages............\n");
 
     NMEA2000.ParseMessages();       // Parse NMEA2000 Messages
     int SourceAddress = NMEA2000.GetN2kSource();
