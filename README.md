@@ -4,7 +4,7 @@ The ESP32 in this project is an Adafruit Huzzah! ESP32. This is a small module w
 
 With the ESP32 and 2 Sensors for gyro (MMA8452) and distance (Sharp GP2Y0A21) it's possible
 monitoring the varaible Kiel and the Inclined position (Krängung, Roll). 
-The Roll-data are available as NMEA0183 UDP-Stream over Wlan.
+The Roll-data are available as NMEA0183 UDP-Stream over Wlan and NMEA2000.
 
 The 12 Volt is reduced to 5 Volt with a DC Step-Down_Converter. 12V DC comes from the N2k Bus Connector with the M12 Connector.
 
@@ -16,21 +16,22 @@ from /data directory.
 
 # Partlist:
 
-- Adafruit Huzzah! ESP32 (for programming need USB-Adapter)
+- Adafruit Huzzah! ESP32 (for programming need USB-Adapter)[Link](https://www.exp-tech.de/plattformen/internet-of-things-iot/9350/adafruit-huzzah32-esp32-breakout-board)
 - SN65HVD230 [Link](https://www.reichelt.de/high-speed-can-transceiver-1-mbit-s-3-3-v-so-8-sn-65hvd230d-p58427.html?&trstct=pos_0&nbc=1)
 - Traco-Power TSR 1-2450 for 12V / 5V [Link](https://www.reichelt.de/dc-dc-wandler-tsr-1-1-w-5-v-1000-ma-sil-to-220-tsr-1-2450-p116850.html?search=tsr+1-24)
-- PCB by Aisler [Link](https://aisler.net/p/NZFHAMAJ)
+- Gyro MMA8452Q [Link](https://www.reichelt.de/entwicklerboards-beschleunigungsmesser-board-mma8452q-debo-sens-acc3-p284397.html)
 - Case Wago 789
 - Resistor 200Ohm , 10kOhm
 
 
 # Wiring diagram
 
-[BootsdatenKiCAD.pdf](https://github.com/gerryvel/Bootsdaten/files/11690286/BootsdatenKiCAD.pdf)
+![grafik](https://github.com/gerryvel/Bootsdaten/assets/17195231/5571a0f5-8a37-4b18-a9da-5ba11bb2f8b1)
 
 # PCB
 
 ![Bootsdaten](https://github.com/gerryvel/Bootsdaten/assets/17195231/b4be1809-5393-4396-8dcf-747c5ca8a09e)
+PCB by Aisler [Link](https://aisler.net/p/NZFHAMAJ)
 
 # Webinterface
 
