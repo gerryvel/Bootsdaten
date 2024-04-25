@@ -109,7 +109,7 @@ const unsigned long TransmitMessages[] PROGMEM = {127257L, // Yaw,Pitch,Roll
 	}
 
 	// Create NMEA2000 message
-	void SendN2kPitch(double Pitch) {   //sende Krängung
+	void SendN2kPitch(double Yaw, double Pitch, double Roll) {   //sende Yaw, Pitch, Roll
 	static unsigned long SlowDataUpdated = InitNextUpdate(SlowDataUpdatePeriod);				
 	tN2kMsg N2kMsg;
 
@@ -118,7 +118,7 @@ const unsigned long TransmitMessages[] PROGMEM = {127257L, // Yaw,Pitch,Roll
 
     	Serial.printf("Krängung: %3.1f °\n",Pitch);
 
-  		SetN2kPGN127257(N2kMsg, 0, N2kDoubleNA, Pitch, N2kDoubleNA); 
+  		SetN2kPGN127257(N2kMsg, 0, Yaw, Pitch, Roll); 
   		NMEA2000.SendMsg(N2kMsg);
 		}
 }
@@ -338,9 +338,10 @@ void loop()
 	fKraengung = (abs(fKraengung));
 	fGaugeKraengung = mma.getX() / 11.377;
 	fGieren = mma.getY() / 11.377;
+	fRollen = mma.getZ() / 11.377;
 	Serial.printf("X, Krängung: %f °\n", fKraengung);
 	Serial.printf("Y, Gieren: %f °\n", fGieren);
-	Serial.printf("Z: %f °\n", mma.getZ() / 11.377);
+	Serial.printf("Z, Rollen: %f °\n", fRollen);
 
 	// Direction Kraengung
 	if (mma.getX() < -1)
@@ -402,11 +403,11 @@ void loop()
 delay(200);
 
 // Daten für N2k
-Serial.print("Daten für N2k:");
-Serial.printf("Krängung: %3.0f °, Gieren: %3.0f °\n", fKraengung, fGieren);
+Serial.print("Daten für N2k:\n");
+Serial.printf("Krängung: %3.0f °, Gieren: %3.0f °, Rollen: %3.0f °\n", fKraengung, fGieren, fRollen);
 Serial.print("SendN2kPitch............\n");
-
-SendN2kPitch(fKraengung); // Send NMEA2000 Message
+ 
+SendN2kPitch(DegToRad(fKraengung), DegToRad(fRollen), DegToRad(fGieren)); // Send NMEA2000 Message
 
 delay(200);
 Serial.print("NMEA2000.ParseMessages............\n");

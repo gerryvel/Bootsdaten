@@ -65,6 +65,7 @@ bool bI2C_Status = 0;
 double fKraengung = 0;				//MMA
 float fGaugeKraengung = 0;
 double fGieren = 0;
+double fRollen = 0;
 String sSTBB = "";
 String sOrient = "";
 
