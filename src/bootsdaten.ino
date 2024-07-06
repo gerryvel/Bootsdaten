@@ -26,13 +26,6 @@
 #include <NMEA2000.h>
 #include <N2kMessages.h>
 
-// Set web server port number to 80
-AsyncWebServer server(80);
-
-// Info Board for HTML-Output
-String sBoardInfo;
-BoardInfo boardInfo;
-
 // NMEA2000
 Preferences preferences;             // Nonvolatile storage on ESP32 - To store LastDeviceAddress
 
