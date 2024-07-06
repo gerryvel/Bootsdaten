@@ -1,6 +1,8 @@
 #ifndef __configuration__H__
 #define __configuration__H__
 
+#include <Arduino.h>
+
 // Configuration N2k
 #define ESP32_CAN_TX_PIN GPIO_NUM_4  // Set CAN TX port to 4 
 #define ESP32_CAN_RX_PIN GPIO_NUM_5  // Set CAN RX port to 5
