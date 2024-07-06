@@ -50,3 +50,11 @@ PCB by Aisler [Link](https://aisler.net/p/NZFHAMAJ)
 ![Zwischenablage03](https://user-images.githubusercontent.com/17195231/234933552-55ede022-9682-486e-8518-c98acedd2c1a.jpg)
 
 ![Zwischenablage04](https://user-images.githubusercontent.com/17195231/234933563-c5276110-f2e7-4a71-a5f1-1a3fbc7df484.jpg)
+
+# Plotter
+
+![IMG_2314](https://github.com/gerryvel/Bootsdaten/assets/17195231/febcb30e-3672-4694-8fb3-9ba91a55eb29)
+
+![IMG_2316](https://github.com/gerryvel/Bootsdaten/assets/17195231/5e494e51-6be4-4165-be44-a78ecafa7947)
+
+
