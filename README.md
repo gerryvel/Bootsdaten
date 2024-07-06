@@ -15,6 +15,11 @@ The HTML Data upload separately with
 - PlatformIO > Build Filesystem and Upload Filesystem Image (PlatformIO) 
 from /data directory.
 
+# Physik:
+
+![strauch_02_03_035](https://github.com/gerryvel/Bootsdaten/assets/17195231/089ffe03-a30e-45d0-bf36-3a9d06e02bc7)
+
+
 # Partlist:
 
 - Adafruit Huzzah! ESP32 (for programming need USB-Adapter)[Link](https://www.exp-tech.de/plattformen/internet-of-things-iot/9350/adafruit-huzzah32-esp32-breakout-board)
