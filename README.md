@@ -3,7 +3,7 @@
 The ESP32 in this project is an Adafruit Huzzah! ESP32. This is a small module without USB connector.
 
 With the ESP32 and 2 Sensors for gyro (MMA8452) and distance (Sharp GP2Y0A21) it's possible
-monitoring the varaible Kiel and the IBoat position Yaw, Pitch, Roll (Krängung, Rollen, Gieren). 
+monitoring the varaible keel (Kiel) and the boat-position Yaw, Pitch, Roll (Krängung, Rollen, Gieren). 
 All data is available in the web interface. 
 The Roll-data are available as NMEA0183 UDP-Stream over Wlan and NMEA2000 with PGN 127257.
 
