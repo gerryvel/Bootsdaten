@@ -1,4 +1,4 @@
-# Bootsdaten (BD-Sensor)
+#BD Sensor Modul
 
 The ESP32 in this project is an Adafruit Huzzah! ESP32. This is a small module without USB connector.
 
