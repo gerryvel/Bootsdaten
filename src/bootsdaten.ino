@@ -271,8 +271,8 @@ void loop()
 	
 	// LED visu Wifi
 	LEDoff();
-	LEDflash(LED(LEDBoard)); // Betrieb ok
-	if (bI2C_Status == 0) LEDblink(LED(Red)); // Sensorfehler
+	LEDflash(LED(Green)); // Betrieb ok
+	if (bI2C_Status == 0) LEDflash(LED(Red)); // Sensorfehler
 
 // OTA	
 	ArduinoOTA.handle();
@@ -316,16 +316,16 @@ void loop()
 	}
 	Serial.printf("Orientation: %s\n", sOrient);
 
-	// LED Kraengung
+	// LED Kraengung, aktivieren wenn am Modul STB(green) / BB(red) LED-Anzeige gewünscht
 	if (bSFM == 0 && bI2C_Status == 1)
 	{
 		if (sSTBB == "Backbord")
 		{
-			digitalWrite(LED(Red), HIGH);
+			//digitalWrite(LED(Red), HIGH);
 		}
 		else 
 		{
-			digitalWrite(LED(Green), HIGH);
+			//digitalWrite(LED(Green), HIGH);
 		}
 	}
 	else if (bI2C_Status == 1)

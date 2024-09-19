@@ -41,7 +41,15 @@ void LEDInit() {
   pinMode(LED(Red),   OUTPUT);
   pinMode(LED(Blue),  OUTPUT);
   pinMode(LED(Green), OUTPUT);
-  pinMode(LED(LEDBoard), OUTPUT);
+  digitalWrite(LED(Red), 1);
+  delay(250);
+  digitalWrite(LED(Red), 0);
+  digitalWrite(LED(Blue), 1);
+  delay(250);
+  digitalWrite(LED(Blue), 0);
+  digitalWrite(LED(Green), 1);
+  delay(250);
+  digitalWrite(LED(Green), 0);
 }
 
 void LEDoff() {
