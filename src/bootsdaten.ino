@@ -78,6 +78,8 @@ void setup()
 
 	Serial.begin(115200);
 
+	Serial.printf("TPW Sensor setup %s start\n", Version);
+
 	//Filesystem prepare for Webfiles
 	if (!LittleFS.begin(true)) {
 		Serial.println("An Error has occurred while mounting LittleFS");
