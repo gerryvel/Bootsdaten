@@ -66,8 +66,8 @@ PCB by Aisler [Link](https://aisler.net/p/NZFHAMAJ)
 - 2.3 Add Pololu MinIMU-9 V5
 - 2.2 Update PCB
 - 2.1 Update Website Gauge's
-- 2.0 Complete Website update, Windsensor Stream read update (code and html files)
-- 1.3 Update Windsensor Wlan connect code
+- 2.0 Complete Website update, NMEA0183 Stream output
+- 1.3 Update Windsensor Wlan
 - 1.2 Update Website
 - 1.1 Update PCB
 - 1.0 working Version
