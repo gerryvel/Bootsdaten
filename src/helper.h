@@ -172,6 +172,7 @@ bool writeConfig(String json)
 }
 
 /***************************** I2C Bus **************************/
+String I2C_address = "";
 
 void I2C_scan(void){
   byte error, address;
@@ -191,6 +192,7 @@ void I2C_scan(void){
       }
       Serial.println(address,HEX);
       nDevices++;
+      I2C_address = address,HEX;
     }
     else if (error==4) 
     {

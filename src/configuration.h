@@ -74,6 +74,9 @@ double fRollen = 0;
 String sSTBB = "";
 String sOrient = "";
 
+float fheading = 0;					//Compass
+float fheadingRad = 0;
+
 const int iMaxSonar = 35;			//Analoginput 
 int iDistance = 0;
 float fSStellung = 0;

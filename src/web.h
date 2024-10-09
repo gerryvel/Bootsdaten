@@ -46,6 +46,9 @@ String replaceVariable(const String& var)
 {
 	if (var == "sKraengung")return String(fKraengung,1);
 	if (var == "sGaugeKraengung")return String(fGaugeKraengung, 1);
+	if (var == "sCompassHeading")return String(fheading, 1);
+	if (var == "sRollen")return String(fRollen, 1);
+	if (var == "sGieren")return String(fGieren, 1);
 	if (var == "sSStellung")return String(fSStellung,1);
 	if (var == "sAbsTief")return String(fAbsTief,1);
 	if (var == "sSTBB")return sSTBB;

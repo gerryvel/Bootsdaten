@@ -2,7 +2,7 @@
     Name:       bootsdaten.ino
     Created:	22.10.2020
 	Update: 	26.09.2023
-    Author:     astec-PG\gerryadmin
+    Author:     Gerry Sebb
 */
 
 #include <Arduino.h>
@@ -17,7 +17,6 @@
 #include <ESP_WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include "LED.h"
-#include <SparkFun_MMA8452Q.h>
 #include <Wire.h>
 #include "Analog.h"
 #include <LittleFS.h>
@@ -29,8 +28,19 @@
 // NMEA2000
 Preferences preferences;             // Nonvolatile storage on ESP32 - To store LastDeviceAddress
 
-//Gyro
+//MMA8452Q Board
+#include <SparkFun_MMA8452Q.h>
 MMA8452Q mma;
+bool bMMA_Status = 0;
+
+//LSM6 & LIS3 Board
+#include <LIS3MDL.h>
+#include <LSM6.h>
+LSM6 gyro;
+LIS3MDL mag;
+LIS3MDL::vector<int16_t> m_min = {32767, 32767, 32767}, m_max = {-32768, -32768, -32768};
+bool bGyro_Status = 0;
+char report[80];
 
 //NMEA 0183 Stream
 WiFiUDP udp;  // Create UDP instance
@@ -80,7 +90,7 @@ void setup()
 
 	Serial.printf("TPW Sensor setup %s start\n", Version);
 
-	//Filesystem prepare for Webfiles
+//Filesystem prepare for Webfiles
 	if (!LittleFS.begin(true)) {
 		Serial.println("An Error has occurred while mounting LittleFS");
 		return;
@@ -98,36 +108,66 @@ void setup()
 
 	pinMode(iMaxSonar, INPUT);
 
-	// I2C
+// I2C
   	Wire.begin(I2C_SDA, I2C_SCL);
   	I2C_scan();
 
-	//LED
+//LED
   	LEDInit();
   	LEDoff();
 	
-	// Boardinfo	
+// Boardinfo	
   	sBoardInfo = boardInfo.ShowChipIDtoString();
 
-	//MMA
+//MMA
 	bool MMAbegin = mma.init();
-
 	switch (MMAbegin) {
 	case 0:
-		Serial.println("\nMMA could not start!");
-		sI2C_Status = "Keinen Sensor gefunden!";
-		bI2C_Status = 0;
+		Serial.println("\nGyro MMA could not start!");
+		bMMA_Status = 0;
 		break;
 	case 1:
 		Serial.println("\nMMA found!");
+		Serial.println(I2C_address);
 		mma.init(SCALE_2G);
 		Serial.print("Range = "); Serial.print(2 << mma.available());
-		Serial.println("G");   
-		sI2C_Status = "Sensor gefunden!"; 
-		bI2C_Status = 1;          
+		Serial.println("G");    
+		bMMA_Status = 1;          
 	}
 	
-	//WIFI
+// Gyro LSM6
+	bool Gyrobegin = gyro.init();
+	switch (Gyrobegin) {
+	case 0:
+		Serial.println("\nGyro LSM6 could not start!");
+		bGyro_Status = 1;
+		break;
+	case 1:
+		Serial.println("\nGyro LSM6 found!");	
+		gyro.enableDefault();	
+		bGyro_Status = 1;        
+	}
+
+//Compass
+	bool MAGbegin = mag.init();
+	switch (MAGbegin) {
+	case 0:
+		Serial.println("\n Compass could not start!");
+		break;
+	case 1:
+		Serial.println("\nCompass found!");
+		mag.enableDefault();
+	}
+
+// Set I2C Status 
+	if (bGyro_Status ==1)
+		sI2C_Status = "Gyro LSM6 aktiv!";
+	if (bMMA_Status ==1)
+		sI2C_Status = "Gyro MMA8452Q aktiv!";
+	if (!bGyro_Status && !bMMA_Status)
+		sI2C_Status = "Gyro nicht gefunden!";	
+
+//WIFI
 	if (!WiFi.setHostname(HostName))
 		Serial.println("\nSet Hostname success");
 	else
@@ -143,7 +183,7 @@ void setup()
 		Serial.println("IP config not success");	
 
 	IPAddress myIP = WiFi.softAPIP();
-	Serial.print("AP IP configured with address: ");
+	Serial.print("AP IP configured with address: \n");
 	Serial.println(myIP);
 	
 
@@ -160,6 +200,9 @@ void setup()
 	});
 	server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
 		request->send(LittleFS, "/index.html", String(), false, replaceVariable);
+	});
+	server.on("/compass.html", HTTP_GET, [](AsyncWebServerRequest* request) {
+		request->send(LittleFS, "/compass.html", String(), false, replaceVariable);
 	});
 	server.on("/system.html", HTTP_GET, [](AsyncWebServerRequest* request) {
 		request->send(LittleFS, "/system.html", String(), false, replaceVariable);
@@ -197,7 +240,7 @@ void setup()
 
 	// Start TCP (HTTP) server
 	server.begin();
-	Serial.println("TCP server started");
+	Serial.println("TCP server started\n");
 
 	// Add service to MDNS-SD
 	MDNS.addService("http", "tcp", 80);
@@ -264,6 +307,32 @@ void setup()
 
 }
 
+template <typename T> float computeHeading(LIS3MDL::vector<T> from)
+{
+  LIS3MDL::vector<int32_t> temp_m = {mag.m.x, mag.m.y, mag.m.z};
+
+  // copy acceleration readings from LSM6::vector into an LIS3MDL::vector
+  LIS3MDL::vector<int16_t> a = {gyro.a.x, gyro.a.y, gyro.a.z};
+
+  // subtract offset (average of min and max) from magnetometer readings
+  temp_m.x -= ((int32_t)m_min.x + m_max.x) / 2;
+  temp_m.y -= ((int32_t)m_min.y + m_max.y) / 2;
+  temp_m.z -= ((int32_t)m_min.z + m_max.z) / 2;
+
+  // compute E and N
+  LIS3MDL::vector<float> E;
+  LIS3MDL::vector<float> N;
+  LIS3MDL::vector_cross(&temp_m, &a, &E);
+  LIS3MDL::vector_normalize(&E);
+  LIS3MDL::vector_cross(&a, &E, &N);
+  LIS3MDL::vector_normalize(&N);
+
+  // compute heading
+  float heading = atan2(LIS3MDL::vector_dot(&E, &from), LIS3MDL::vector_dot(&N, &from)) * 180 / PI;
+  if (heading < 0) heading += 360;
+  return heading;
+}
+
 // Add the main program code into the continuous loop() function
 void loop()
 {
@@ -284,25 +353,43 @@ void loop()
   Serial.printf("Soft-AP IP address = %s\n", WiFi.softAPIP().toString());
   sCL_Status = sWifiStatus(WiFi.status());
 
-// read MMA, use x for Kraengung (Roll), y for Gieren (Pitch)
+// read MMA
+uint8_t Orientation = 0;
+if (bMMA_Status == 1) {
 	fKraengung = mma.getX() / 11.377;
 	fKraengung = (abs(fKraengung));
 	fGaugeKraengung = mma.getX() / 11.377;
 	fGieren = mma.getY() / 11.377;
 	fRollen = mma.getZ() / 11.377;
+	Serial.print("MMA auslesen:\n");
 	Serial.printf("X, Krängung: %f °\n", fKraengung);
 	Serial.printf("Y, Gieren: %f °\n", fGieren);
 	Serial.printf("Z, Rollen: %f °\n", fRollen);
+	Orientation = mma.readPL();
+}
 
-	// Direction Kraengung
-	if (mma.getX() < -1)
+// read Gyro
+float fGyroTemp = 0;
+if (bGyro_Status == 1) {
+	gyro.read();
+	fKraengung = atan2(-gyro.a.x, sqrt(gyro.a.y * gyro.a.y + gyro.a.z * gyro.a.z)) * 180.0 / PI;
+	fGaugeKraengung = fKraengung;
+	fGieren = atan2(sqrt(gyro.a.y * gyro.a.y + gyro.a.z * gyro.a.z), gyro.a.x) * 180 / PI;
+	fRollen = atan2(gyro.a.y, gyro.a.z) * 180.0 / PI;
+	Serial.print("IMU auslesen:\n");
+	Serial.printf("X, Krängung: %f °\n", fKraengung);
+	Serial.printf("Y, Gieren: %f °\n", fGieren);
+	Serial.printf("Z, Rollen: %f °\n", fRollen);
+	Serial.printf("Temperatur: %f °C\n", fGyroTemp);
+}
+// Direction Kraengung
+	if (fKraengung < -1)
 		sSTBB = "Backbord";
 	else sSTBB = "Steuerbord";
 	Serial.printf("Kraengung nach: %s %f °\n", sSTBB, fKraengung);
 
-	// read I2C Orientation Sensor
+// read I2C Orientation Sensor
 	bool bSFM = 0; // SensorFalschMontiert
-	uint8_t Orientation = mma.readPL();
 	switch (Orientation) {
 	case PORTRAIT_U: sOrient = "Oben";break;
 	case PORTRAIT_D: sOrient = "Unten"; 
@@ -318,7 +405,7 @@ void loop()
 	}
 	Serial.printf("Orientation: %s\n", sOrient);
 
-	// LED Kraengung, aktivieren wenn am Modul STB(green) / BB(red) LED-Anzeige gewünscht
+// LED Kraengung, aktivieren wenn am Modul STB(green) / BB(red) LED-Anzeige gewünscht
 	if (bSFM == 0 && bI2C_Status == 1)
 	{
 		if (sSTBB == "Backbord")
@@ -333,7 +420,27 @@ void loop()
 	else if (bI2C_Status == 1)
 	{
 		digitalWrite(LED(Blue), HIGH);
-	}	
+	}
+	
+// compass read
+	mag.read();
+
+	m_min.x = min(m_min.x, mag.m.x);
+ 	m_min.y = min(m_min.y, mag.m.y);
+  	m_min.z = min(m_min.z, mag.m.z);
+	m_max.x = max(m_max.x, mag.m.x);
+  	m_max.y = max(m_max.y, mag.m.y);
+  	m_max.z = max(m_max.z, mag.m.z);
+	snprintf(report, sizeof(report), "min: {%+6d, %+6d, %+6d}   max: {%+6d, %+6d, %+6d}",
+    m_min.x, m_min.y, m_min.z,
+    m_max.x, m_max.y, m_max.z);
+ 	Serial.println(report);
+
+	fheading = computeHeading((LIS3MDL::vector<int>){1, 0, 0});
+	fheadingRad = DegToRad(fheading);
+	Serial.printf("Heading (Grad): %f °\n", fheading);
+  	Serial.printf("Heading (Radian): %f °\n", fheadingRad);
+
 
 //AI Distance-Sensor
 	iDistance = analogRead(iMaxSonar);

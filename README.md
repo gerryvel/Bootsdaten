@@ -13,8 +13,8 @@ The 12 Volt is reduced to 5 Volt with a DC Step-Down_Converter. 12V DC comes fro
 
 The Website use LittleFS Filesystem. You must use Partition Schemes "Minimal SPIFFS with APPS and OTA".
 The HTML Data upload separately with 
-- "ESP 32 Sketch Data upload" (Arduino IDE) or 
-- PlatformIO > Build Filesystem and Upload Filesystem Image (PlatformIO) 
+- Arduino IDE > "ESP 32 Sketch Data upload" or 
+- VS-Code > Build Filesystem and Upload Filesystem Image (PlatformIO) 
 from /data directory.
 
 # Physik:
@@ -41,6 +41,7 @@ from /data directory.
 ![photo_2023-07-20_13-50-08](https://github.com/gerryvel/Bootsdaten/assets/17195231/ef5a9be6-c718-4481-8ee6-a68689e1808c)
 
 ![Bootsdaten](https://github.com/gerryvel/Bootsdaten/assets/17195231/b4be1809-5393-4396-8dcf-747c5ca8a09e)
+
 PCB by Aisler [Link](https://aisler.net/p/NZFHAMAJ)
 
 # Webinterface
@@ -60,3 +61,13 @@ PCB by Aisler [Link](https://aisler.net/p/NZFHAMAJ)
 ![IMG_2316](https://github.com/gerryvel/Bootsdaten/assets/17195231/5e494e51-6be4-4165-be44-a78ecafa7947)
 
 
+# Versions
+
+- 2.3 Add Pololu MinIMU-9 V5
+- 2.2 Update PCB
+- 2.1 Update Website Gauge's
+- 2.0 Complete Website update, Windsensor Stream read update (code and html files)
+- 1.3 Update Windsensor Wlan connect code
+- 1.2 Update Website
+- 1.1 Update PCB
+- 1.0 working Version
