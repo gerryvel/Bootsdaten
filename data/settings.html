@@ -32,6 +32,25 @@
             xhr.send();
         }
     </script>
+    </p>  
+    <p class="label">Nach &Auml;nderungen neu starten!</p>
+    
+
+    <button class="button" onclick="reboot_handler()">Neustart</button>
+    </p>
+
+    <p id="status"></p>
+    <script>
+        function reboot_handler() 
+        {
+        document.getElementById("status").innerHTML = "Invoking Reboot ...";
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/reboot", true);
+        xhr.send();
+        setTimeout(function(){ window.open("/reboot","_self"); }, 500);
+        }
+    </script>
+
 
     <ul class="bottomnav">
         <li><a href="/">Home</a></li>

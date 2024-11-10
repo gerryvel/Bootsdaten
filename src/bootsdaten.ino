@@ -39,7 +39,7 @@ bool bMMA_Status = 0;
 LSM6 gyro;
 LIS3MDL mag;
 LIS3MDL::vector<int16_t> m_min = {32767, 32767, 32767}, m_max = {-32768, -32768, -32768};
-bool bGyro_Status = 0;
+bool bGyroMag_Status = 0;
 char report[80];
 
 //NMEA 0183 Stream
@@ -88,7 +88,7 @@ void setup()
 
 	Serial.begin(115200);
 
-	Serial.printf("TPW Sensor setup %s start\n", Version);
+	Serial.printf("Boots-Sensor setup %s start\n", Version);
 
 //Filesystem prepare for Webfiles
 	if (!LittleFS.begin(true)) {
@@ -102,9 +102,9 @@ void setup()
   	listDir(LittleFS, "/", 3);
 	// file exists, reading and loading config file
 	readConfig("/config.json");
-	AP_SSID = tAP_Config.wAP_SSID;
-	AP_PASSWORD = tAP_Config.wAP_Password;
-	fKielOffset = atof(tAP_Config.wKiel_Offset);
+	AP_SSID = tWeb_Config.wAP_SSID;
+	AP_PASSWORD = tWeb_Config.wAP_Password;
+	fKielOffset = atof(tWeb_Config.wKiel_Offset);
 
 	pinMode(iMaxSonar, INPUT);
 
@@ -112,80 +112,78 @@ void setup()
   	Wire.begin(I2C_SDA, I2C_SCL);
   	I2C_scan();
 
+// Auswahl Sensor: MMA8452 = 0, LSM6M & LIS3 Compass = 1
+		switch (mma.init()) {
+			case 0:
+				Serial.println("\nGyro MMA could not start!");
+				bMMA_Status = 0;
+				break;
+			case 1:
+				Serial.println("\nMMA found!");
+				Serial.println(I2C_address);
+				mma.init(SCALE_2G);
+				Serial.print("Range = "); Serial.print(2 << mma.available());
+				Serial.println("G");    
+				bMMA_Status = 1;          
+			}
+
+		switch (gyro.init()) {
+			case 0:
+				Serial.println("\nGyro LSM6 could not start!");
+				bGyroMag_Status = 0;
+				break;
+			case 1:
+				Serial.println("\nGyro LSM6 found!");	
+				gyro.enableDefault();	
+				bGyroMag_Status = 1;        
+			}
+
+		switch (mag.init()) {
+			case 0:
+				Serial.println("\n Compass could not start!");
+				break;
+			case 1:
+				Serial.println("\nCompass found!");
+				mag.enableDefault();
+				}
+
+
+// Set I2C Status 
+	if (bGyroMag_Status ==1)
+		sI2C_Status = "Gyro LSM6 & Kompass LIS3 aktiv!";
+	if (bMMA_Status ==1)
+		sI2C_Status = "Gyro MMA8452Q aktiv!";
+	if (!bGyroMag_Status && !bMMA_Status)
+		sI2C_Status = "Gyro nicht gefunden!";	
+
+
 //LED
   	LEDInit();
-  	LEDoff();
 	
 // Boardinfo	
   	sBoardInfo = boardInfo.ShowChipIDtoString();
 
-//MMA
-	bool MMAbegin = mma.init();
-	switch (MMAbegin) {
-	case 0:
-		Serial.println("\nGyro MMA could not start!");
-		bMMA_Status = 0;
-		break;
-	case 1:
-		Serial.println("\nMMA found!");
-		Serial.println(I2C_address);
-		mma.init(SCALE_2G);
-		Serial.print("Range = "); Serial.print(2 << mma.available());
-		Serial.println("G");    
-		bMMA_Status = 1;          
-	}
-	
-// Gyro LSM6
-	bool Gyrobegin = gyro.init();
-	switch (Gyrobegin) {
-	case 0:
-		Serial.println("\nGyro LSM6 could not start!");
-		bGyro_Status = 1;
-		break;
-	case 1:
-		Serial.println("\nGyro LSM6 found!");	
-		gyro.enableDefault();	
-		bGyro_Status = 1;        
-	}
-
-//Compass
-	bool MAGbegin = mag.init();
-	switch (MAGbegin) {
-	case 0:
-		Serial.println("\n Compass could not start!");
-		break;
-	case 1:
-		Serial.println("\nCompass found!");
-		mag.enableDefault();
-	}
-
-// Set I2C Status 
-	if (bGyro_Status ==1)
-		sI2C_Status = "Gyro LSM6 aktiv!";
-	if (bMMA_Status ==1)
-		sI2C_Status = "Gyro MMA8452Q aktiv!";
-	if (!bGyro_Status && !bMMA_Status)
-		sI2C_Status = "Gyro nicht gefunden!";	
-
 //WIFI
+	
+	//WiFiServer AP starten
+	WiFi.mode(WIFI_AP_STA);
+	WiFi.softAP(AP_SSID, AP_PASSWORD);
+	delay(1000);
+	if (WiFi.softAPConfig(IP, Gateway, NMask)){
+		Serial.println("Network " + String(AP_SSID) + " running");	
+		Serial.println("\nNetwork IP " + IP.toString() + " ,GW: " + Gateway.toString() + " ,Mask: " + NMask.toString() + " set");
+	}else{
+		Serial.println("IP config not success");	
+	}
+
 	if (!WiFi.setHostname(HostName))
 		Serial.println("\nSet Hostname success");
 	else
 		Serial.println("\nSet Hostname not success");
 
-	//WiFiServer AP starten
-	WiFi.mode(WIFI_AP_STA);
-	WiFi.softAP(AP_SSID, AP_PASSWORD);
 	delay(1000);
-	if (WiFi.softAPConfig(IP, Gateway, NMask))
-		Serial.println("\nIP config success");	
-	else
-		Serial.println("IP config not success");	
 
-	IPAddress myIP = WiFi.softAPIP();
-	Serial.print("AP IP configured with address: \n");
-	Serial.println(myIP);
-	
+	WiFiDiag();
 
 	if (!MDNS.begin(HostName)) {
 		Serial.println("Error setting up MDNS responder!");
@@ -193,50 +191,9 @@ void setup()
 			delay(1000);
 		}
 	}
-	Serial.println("mDNS responder started");
+	Serial.println("mDNS responder started\n");
 
-	server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/favicon.ico", "image/x-icon");
-	});
-	server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
-		request->send(LittleFS, "/index.html", String(), false, replaceVariable);
-	});
-	server.on("/compass.html", HTTP_GET, [](AsyncWebServerRequest* request) {
-		request->send(LittleFS, "/compass.html", String(), false, replaceVariable);
-	});
-	server.on("/system.html", HTTP_GET, [](AsyncWebServerRequest* request) {
-		request->send(LittleFS, "/system.html", String(), false, replaceVariable);
-	});
-	server.on("/settings.html", HTTP_GET, [](AsyncWebServerRequest* request) {
-		request->send(LittleFS, "/settings.html", String(), false, replaceVariable);
-	});
-	server.on("/ueber.html", HTTP_GET, [](AsyncWebServerRequest* request) {
-		request->send(LittleFS, "/ueber.html", String(), false, replaceVariable);
-	});
-	server.on("/gauge.min.js", HTTP_GET, [](AsyncWebServerRequest* request) {
-		request->send(LittleFS, "/gauge.min.js");
-	});
-	server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
-		request->send(LittleFS, "/style.css", "text/css");
-	});
-	server.on("/settings.html", HTTP_POST, [](AsyncWebServerRequest *request)
-	{
-		int count = request->params();
-		Serial.printf("Anzahl: %i\n", count);
-		for (int i = 0;i < count;i++)
-		{
-			AsyncWebParameter* p = request->getParam(i);
-			Serial.print("PWerte von der Internet - Seite: ");
-			Serial.print("Param name: ");
-			Serial.println(p->name());
-			Serial.print("Param value: ");
-			Serial.println(p->value());
-			Serial.println("------");
-			// p->value in die config schreiben
-			writeConfig(p->value());
-		}
-		request->send(200, "text/plain", "Daten gespeichert");
-	});
+	website();
 
 	// Start TCP (HTTP) server
 	server.begin();
@@ -257,7 +214,7 @@ void setup()
   	NMEA2000.SetProductInformation("BD01", // Manufacturer's Model serial code
                                  100, // Manufacturer's product code
                                  "BD Sensor Module",  // Manufacturer's Model ID
-                                 "1.0.3.00 (2023-09-30)",  // Manufacturer's Software version code
+                                 "2.0.0.00 (2024-09-30)",  // Manufacturer's Software version code
                                  "1.0.3.0 (2023-09-30)" // Manufacturer's Model version
                                 );
   	// Set device information
@@ -356,12 +313,13 @@ void loop()
 // read MMA
 uint8_t Orientation = 0;
 if (bMMA_Status == 1) {
+	Serial.print("Read MMA 8452\n");
 	fKraengung = mma.getX() / 11.377;
 	fKraengung = (abs(fKraengung));
 	fGaugeKraengung = mma.getX() / 11.377;
 	fGieren = mma.getY() / 11.377;
 	fRollen = mma.getZ() / 11.377;
-	Serial.print("MMA auslesen:\n");
+	Serial.print("MMA 8452 auslesen:\n");
 	Serial.printf("X, Krängung: %f °\n", fKraengung);
 	Serial.printf("Y, Gieren: %f °\n", fGieren);
 	Serial.printf("Z, Rollen: %f °\n", fRollen);
@@ -370,13 +328,14 @@ if (bMMA_Status == 1) {
 
 // read Gyro
 float fGyroTemp = 0;
-if (bGyro_Status == 1) {
+if (bGyroMag_Status == 1) {
 	gyro.read();
+	Serial.print("Read Gyro LSM6\n");
 	fKraengung = atan2(-gyro.a.x, sqrt(gyro.a.y * gyro.a.y + gyro.a.z * gyro.a.z)) * 180.0 / PI;
 	fGaugeKraengung = fKraengung;
 	fGieren = atan2(sqrt(gyro.a.y * gyro.a.y + gyro.a.z * gyro.a.z), gyro.a.x) * 180 / PI;
 	fRollen = atan2(gyro.a.y, gyro.a.z) * 180.0 / PI;
-	Serial.print("IMU auslesen:\n");
+	Serial.print("Gyro LSM6 auslesen:\n");
 	Serial.printf("X, Krängung: %f °\n", fKraengung);
 	Serial.printf("Y, Gieren: %f °\n", fGieren);
 	Serial.printf("Z, Rollen: %f °\n", fRollen);
@@ -423,8 +382,9 @@ if (bGyro_Status == 1) {
 	}
 	
 // compass read
+if (bGyroMag_Status == 1) {
 	mag.read();
-
+	Serial.print("Read LIS3 Compass\n");
 	m_min.x = min(m_min.x, mag.m.x);
  	m_min.y = min(m_min.y, mag.m.y);
   	m_min.z = min(m_min.z, mag.m.z);
@@ -440,7 +400,7 @@ if (bGyro_Status == 1) {
 	fheadingRad = DegToRad(fheading);
 	Serial.printf("Heading (Grad): %f °\n", fheading);
   	Serial.printf("Heading (Radian): %f °\n", fheadingRad);
-
+	}
 
 //AI Distance-Sensor
 	iDistance = analogRead(iMaxSonar);
@@ -453,7 +413,7 @@ if (bGyro_Status == 1) {
 
 // config von LittleFS lesen, Kieloffset schreiben
 	readConfig("/config.json");
-	fKielOffset = atof(tAP_Config.wKiel_Offset);
+	fKielOffset = atof(tWeb_Config.wKiel_Offset);
 
 // Send Messages NMEA
 	SendNMEA0183Message(sendXDR()); // Send NMEA0183 Message
@@ -486,4 +446,12 @@ Serial.print("NMEA2000.ParseMessages............\n");
   }
 	
 	freeHeapSpace();
+
+	if (IsRebootRequired) {
+			Serial.println("Rebooting ESP32: "); 
+			delay(1000); // give time for reboot page to load
+			ESP.restart();
+			}
+
+
 }
