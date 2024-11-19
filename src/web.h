@@ -15,7 +15,6 @@ AsyncEventSource events("/events");
 // Info Board for HTML-Output
 String sBoardInfo;
 BoardInfo boardInfo;
-bool IsRebootRequired = false;
 
 //Variables for website
 String sCL_Status = sWifiStatus(WiFi.status());
