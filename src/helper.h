@@ -115,11 +115,11 @@ void readConfig(String filename) {
 		Serial.println("deserializeJson ok");
 		{
 			Serial.println("Lese Daten aus Config - Datei");
-			strcpy(tAP_Config.wAP_SSID, testDocument["SSID"] | "Bootsdaten");
-			strcpy(tAP_Config.wAP_IP, testDocument["IP"] | "192.168.16.1");
-			strcpy(tAP_Config.wAP_Password, testDocument["Password"] | "12345678");
-			strcpy(tAP_Config.wKiel_Offset, testDocument["Kiel_Offset"] | "70.0");
-			Serial.println(tAP_Config.wAP_SSID);
+			strcpy(tWeb_Config.wAP_SSID, testDocument["SSID"] | "Bootsdaten");
+			strcpy(tWeb_Config.wAP_IP, testDocument["IP"] | "192.168.16.1");
+			strcpy(tWeb_Config.wAP_Password, testDocument["Password"] | "12345678");
+			strcpy(tWeb_Config.wKiel_Offset, testDocument["Kiel_Offset"] | "70.0");
+			Serial.println(tWeb_Config.wAP_SSID);
 		}
 		configFile.close();
 		Serial.println("Config - Datei geschlossen");
@@ -172,7 +172,6 @@ bool writeConfig(String json)
 }
 
 /***************************** I2C Bus **************************/
-String I2C_address = "";
 
 void I2C_scan(void){
   byte error, address;
@@ -189,8 +188,8 @@ void I2C_scan(void){
       if (address<16) 
       {
         Serial.print("0");
-      }
-      Serial.println(address,HEX);
+      }   
+      Serial.println(address,HEX);  // Serial.println(address,HEX);
       nDevices++;
       I2C_address = address,HEX;
     }

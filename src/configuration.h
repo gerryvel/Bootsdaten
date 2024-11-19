@@ -32,7 +32,7 @@ struct Web_Config
 	char wAP_Password[12];
 	char wKiel_Offset[5];
 };
-Web_Config tAP_Config;
+Web_Config tWeb_Config;
 
 //Configuration AP 
 #define HostName        "Bootsdaten"
@@ -66,7 +66,10 @@ float fbmp_pressure = 0;
 float fbmp_altitude = 0;
 String sI2C_Status = "";
 bool bI2C_Status = 0;
+int I2C_Typ = 0;
+String I2C_address = "";
 
+// Bootsdaten > Krängung etc
 double fKraengung = 0;				//MMA
 float fGaugeKraengung = 0;
 double fGieren = 0;

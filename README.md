@@ -46,13 +46,13 @@ PCB by Aisler [Link](https://aisler.net/p/NZFHAMAJ)
 
 # Webinterface
 
-![Zwischenablage01](https://user-images.githubusercontent.com/17195231/234933514-95c5519c-ce94-45df-af15-64128691161c.jpg)
+![image](https://github.com/user-attachments/assets/d4dc4f33-6e58-43d9-b7c4-10e848a5ee16)
 
-![Zwischenablage02](https://user-images.githubusercontent.com/17195231/234933530-b59c1f4c-b747-41a3-8f6a-eba9062560dc.jpg)
+![image](https://github.com/user-attachments/assets/f69d6575-1ac2-499b-8d04-a23bc08548e9)
 
-![Zwischenablage03](https://user-images.githubusercontent.com/17195231/234933552-55ede022-9682-486e-8518-c98acedd2c1a.jpg)
+![image](https://github.com/user-attachments/assets/2348caff-3b6f-46d9-891f-991ea3ca2e12)
 
-![Zwischenablage04](https://user-images.githubusercontent.com/17195231/234933563-c5276110-f2e7-4a71-a5f1-1a3fbc7df484.jpg)
+![image](https://github.com/user-attachments/assets/b88cad09-4c7a-4b57-999e-0fbe037e8dbd)
 
 # Plotter
 
