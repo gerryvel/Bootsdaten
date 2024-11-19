@@ -1,7 +1,7 @@
 /*
     Name:       bootsdaten.ino
     Created:	22.10.2020
-	Update: 	26.09.2023
+	Update: 	V2.3 vom 19.11.2024
     Author:     Gerry Sebb
 */
 
@@ -11,19 +11,19 @@
 #include "configuration.h"
 #include "helper.h"
 #include "web.h"
+#include "Analog.h"
+#include "LED.h"
 #include <esp.h>
 #include <Preferences.h>
 #include <ESPmDNS.h>
 #include <ESP_WiFi.h>
 #include <ESPAsyncWebServer.h>
-#include "LED.h"
-#include <Wire.h>
-#include "Analog.h"
 #include <LittleFS.h>
-#include "NMEA0183Telegram.h"
+#include <Wire.h>
 #include <NMEA2000_CAN.h>
 #include <NMEA2000.h>
 #include <N2kMessages.h>
+#include "NMEA0183Telegram.h"
 
 // NMEA2000
 Preferences preferences;             // Nonvolatile storage on ESP32 - To store LastDeviceAddress
@@ -67,20 +67,36 @@ const unsigned long TransmitMessages[] PROGMEM = {127257L, // Yaw,Pitch,Roll
   		while ( NextUpdate < millis() ) NextUpdate += Period;
 	}
 
-	// Create NMEA2000 message
+// Create NMEA2000 message
 	void SendN2kPitch(double Yaw, double Pitch, double Roll) {   //sende Yaw, Pitch, Roll
-	static unsigned long SlowDataUpdated = InitNextUpdate(SlowDataUpdatePeriod);				
+	static unsigned long SlowDataUpdated = InitNextUpdate(SlowDataUpdatePeriod, PGN1SendOffset);				
 	tN2kMsg N2kMsg;
 
   	if ( IsTimeToUpdate(SlowDataUpdated) ) {
     	SetNextUpdate(SlowDataUpdated, SlowDataUpdatePeriod);
 
-    	Serial.printf("Krängung: %3.1f °\n",Pitch);
+    	Serial.printf("Krängung			: %3.1f °\n",Yaw);
+		Serial.printf("Gieren			: %3.1f °\n",Pitch);
+		Serial.printf("Rollen			: %3.1f °\n",Roll);
 
   		SetN2kPGN127257(N2kMsg, 0, Yaw, Pitch, Roll); 
   		NMEA2000.SendMsg(N2kMsg);
 		}
-}
+	}
+
+	void SendN2kHeading(double Heading) {
+	static unsigned long SlowDataUpdated = InitNextUpdate(SlowDataUpdatePeriod, PGN2endOffset);
+	tN2kMsg N2kMsg;
+
+	if ( IsTimeToUpdate(SlowDataUpdated) ) {
+		SetNextUpdate(SlowDataUpdated, SlowDataUpdatePeriod);
+
+		Serial.printf("Heading     		: %3.1f °\n", Heading);
+
+		SetN2kMagneticHeading(N2kMsg, 2, Heading, N2kDoubleNA, N2kDoubleNA);
+		NMEA2000.SendMsg(N2kMsg);
+	}
+	}
 
 // The setup() function runs once each time the micro-controller starts
 void setup()
@@ -88,7 +104,7 @@ void setup()
 
 	Serial.begin(115200);
 
-	Serial.printf("TPW Sensor setup %s start\n", Version);
+	Serial.printf("BD Sensor setup %s start\n", Version);
 
 //Filesystem prepare for Webfiles
 	if (!LittleFS.begin(true)) {
@@ -152,7 +168,7 @@ void setup()
 	bool MAGbegin = mag.init();
 	switch (MAGbegin) {
 	case 0:
-		Serial.println("\n Compass could not start!");
+		Serial.println("\nCompass could not start!");
 		break;
 	case 1:
 		Serial.println("\nCompass found!");
@@ -162,8 +178,10 @@ void setup()
 // Set I2C Status 
 	if (bGyro_Status ==1)
 		sI2C_Status = "Gyro LSM6 aktiv!";
+		bI2C_Status = 1;
 	if (bMMA_Status ==1)
 		sI2C_Status = "Gyro MMA8452Q aktiv!";
+		bI2C_Status = 1;
 	if (!bGyro_Status && !bMMA_Status)
 		sI2C_Status = "Gyro nicht gefunden!";	
 
@@ -195,55 +213,15 @@ void setup()
 	}
 	Serial.println("mDNS responder started");
 
-	server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(LittleFS, "/favicon.ico", "image/x-icon");
-	});
-	server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
-		request->send(LittleFS, "/index.html", String(), false, replaceVariable);
-	});
-	server.on("/compass.html", HTTP_GET, [](AsyncWebServerRequest* request) {
-		request->send(LittleFS, "/compass.html", String(), false, replaceVariable);
-	});
-	server.on("/system.html", HTTP_GET, [](AsyncWebServerRequest* request) {
-		request->send(LittleFS, "/system.html", String(), false, replaceVariable);
-	});
-	server.on("/settings.html", HTTP_GET, [](AsyncWebServerRequest* request) {
-		request->send(LittleFS, "/settings.html", String(), false, replaceVariable);
-	});
-	server.on("/ueber.html", HTTP_GET, [](AsyncWebServerRequest* request) {
-		request->send(LittleFS, "/ueber.html", String(), false, replaceVariable);
-	});
-	server.on("/gauge.min.js", HTTP_GET, [](AsyncWebServerRequest* request) {
-		request->send(LittleFS, "/gauge.min.js");
-	});
-	server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
-		request->send(LittleFS, "/style.css", "text/css");
-	});
-	server.on("/settings.html", HTTP_POST, [](AsyncWebServerRequest *request)
-	{
-		int count = request->params();
-		Serial.printf("Anzahl: %i\n", count);
-		for (int i = 0;i < count;i++)
-		{
-			AsyncWebParameter* p = request->getParam(i);
-			Serial.print("PWerte von der Internet - Seite: ");
-			Serial.print("Param name: ");
-			Serial.println(p->name());
-			Serial.print("Param value: ");
-			Serial.println(p->value());
-			Serial.println("------");
-			// p->value in die config schreiben
-			writeConfig(p->value());
-		}
-		request->send(200, "text/plain", "Daten gespeichert");
-	});
-
 	// Start TCP (HTTP) server
 	server.begin();
 	Serial.println("TCP server started\n");
 
 	// Add service to MDNS-SD
 	MDNS.addService("http", "tcp", 80);
+
+	//Website
+	website();
 
 	// NMEA2000
   	NMEA2000.SetN2kCANMsgBufSize(8);
@@ -331,9 +309,12 @@ template <typename T> float computeHeading(LIS3MDL::vector<T> from)
   float heading = atan2(LIS3MDL::vector_dot(&E, &from), LIS3MDL::vector_dot(&N, &from)) * 180 / PI;
   if (heading < 0) heading += 360;
   return heading;
+
+	LEDoff();
+
 }
 
-// Add the main program code into the continuous loop() function
+
 void loop()
 {
 	//Wifi variables
@@ -341,9 +322,11 @@ void loop()
 	//bAP_on = WiFi.enableAP(bAP_on);
 	
 	// LED visu Wifi
-	LEDoff();
 	LEDflash(LED(Green)); // Betrieb ok
-	if (bI2C_Status == 0) LEDflash(LED(Red)); // Sensorfehler
+	if (bI2C_Status == 0){
+		//LEDflash(LED(Red)); // Sensorfehler
+		Serial.print("Sensorfehler\n");
+	} 
 
 // OTA	
 	ArduinoOTA.handle();
@@ -382,6 +365,7 @@ if (bGyro_Status == 1) {
 	Serial.printf("Z, Rollen: %f °\n", fRollen);
 	Serial.printf("Temperatur: %f °C\n", fGyroTemp);
 }
+
 // Direction Kraengung
 	if (fKraengung < -1)
 		sSTBB = "Backbord";
@@ -405,7 +389,7 @@ if (bGyro_Status == 1) {
 	}
 	Serial.printf("Orientation: %s\n", sOrient);
 
-// LED Kraengung, aktivieren wenn am Modul STB(green) / BB(red) LED-Anzeige gewünscht
+// LED Kraengung, LED aktivieren wenn am Modul STB(green) / BB(red) LED-Anzeige gewünscht
 	if (bSFM == 0 && bI2C_Status == 1)
 	{
 		if (sSTBB == "Backbord")
@@ -451,23 +435,18 @@ if (bGyro_Status == 1) {
 	fAbsTief = fSStellung + fKielOffset;
 	Serial.printf("Tiefgang: %f cm\n", fAbsTief);
 
-// config von LittleFS lesen, Kieloffset schreiben
-	readConfig("/config.json");
-	fKielOffset = atof(tAP_Config.wKiel_Offset);
-
-// Send Messages NMEA
+// Send Messages NMEA 0183
 	SendNMEA0183Message(sendXDR()); // Send NMEA0183 Message
 
-delay(200);
+	delay(200);
 
-// Daten für N2k
-Serial.print("Daten für N2k:\n");
-Serial.printf("Krängung: %3.0f °, Gieren: %3.0f °, Rollen: %3.0f °\n", fKraengung, fGieren, fRollen);
-Serial.print("SendN2kPitch............\n");
- 
-SendN2kPitch(DegToRad(fKraengung), DegToRad(fRollen), DegToRad(fGieren)); // Send NMEA2000 Message
+// Send Messages NMEA 2000
 
-delay(200);
+	SendN2kPitch(DegToRad(fKraengung), DegToRad(fRollen), DegToRad(fGieren));
+	SendN2kHeading(fheadingRad);
+
+	delay(200);
+
 Serial.print("NMEA2000.ParseMessages............\n");
 
     NMEA2000.ParseMessages();       // Parse NMEA2000 Messages
@@ -484,6 +463,17 @@ Serial.print("NMEA2000.ParseMessages............\n");
   	if ( Serial.available() ) {
     Serial.read();
   }
-	
+
+// Website Data	
 	freeHeapSpace();
+	
+	if (IsRebootRequired) {
+		Serial.println("Rebooting ESP32: "); 
+		delay(1000); // give time for reboot page to load
+		ESP.restart();
+		}
+
+if ((!mma.isUp()) && (!gyro.init())) bI2C_Status = 0;
+
+
 }

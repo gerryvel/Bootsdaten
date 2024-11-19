@@ -97,7 +97,7 @@ void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
 }
 
 void readConfig(String filename) {
-	StaticJsonDocument<200> testDocument;
+	JsonDocument testDocument;
 	File configFile = LittleFS.open(filename);
 	if (configFile)
 	{
@@ -146,7 +146,7 @@ bool writeConfig(String json)
 		if (configFile)
 		{
 			Serial.println("Config - Datei zum Schreiben geöffnet");
-			StaticJsonDocument<200> testDocument;
+			JsonDocument testDocument;
 			Serial.println("JSON - Daten übergeben");
 			DeserializationError error = deserializeJson(testDocument, json);
 			// Test if parsing succeeds.

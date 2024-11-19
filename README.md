@@ -63,7 +63,7 @@ PCB by Aisler [Link](https://aisler.net/p/NZFHAMAJ)
 
 # Versions
 
-- 2.3 Add Pololu MinIMU-9 V5
+- 2.3 Add Pololu MinIMU-9 V5 with Compassmodul, add Website and programm
 - 2.2 Update PCB
 - 2.1 Update Website Gauge's
 - 2.0 Complete Website update, NMEA0183 Stream output
