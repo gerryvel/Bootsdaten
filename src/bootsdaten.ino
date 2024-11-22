@@ -39,7 +39,8 @@ bool bMMA_Status = 0;
 #include <LSM6.h>
 LSM6 gyro;
 LIS3MDL mag;
-LIS3MDL::vector<int16_t> m_min = {-8447, -7151, 11009}, m_max = {6699, 4650, 4685};  // Standard for all: -32768
+// LIS3MDL::vector<int16_t> m_min = {-8447, -7151, 11009}, m_max = {6699, 4650, 4685};  // Calibrated
+LIS3MDL::vector<int16_t> m_min = {-32767, -32767, -32767}, m_max = {+32767, +32767, +32767}; // Standard
 bool bGyroMag_Status = 0;
 char report[80];
 
