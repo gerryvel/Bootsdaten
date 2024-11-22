@@ -13,6 +13,7 @@
 #include "web.h"
 #include "Analog.h"
 #include "LED.h"
+#include "imucal.h"
 #include <esp.h>
 #include <Preferences.h>
 #include <ESPmDNS.h>
@@ -38,7 +39,7 @@ bool bMMA_Status = 0;
 #include <LSM6.h>
 LSM6 gyro;
 LIS3MDL mag;
-LIS3MDL::vector<int16_t> m_min = {32767, 32767, 32767}, m_max = {-32768, -32768, -32768};
+LIS3MDL::vector<int16_t> m_min = {-8447, -7151, 11009}, m_max = {6699, 4650, 4685};  // Standard for all: -32768
 bool bGyroMag_Status = 0;
 char report[80];
 
@@ -175,6 +176,9 @@ void setup()
 		bI2C_Status = 1;
 	if (!bGyroMag_Status && !bMMA_Status)
 		sI2C_Status = "Gyro nicht gefunden!";	
+
+// calibration setup
+	callab_setup();
 
 
 //LED
@@ -428,6 +432,9 @@ if (bGyroMag_Status == 1) {
 	Serial.printf("Heading (Grad): %f °\n", fheading);
   	Serial.printf("Heading (Radian): %f °\n", fheadingRad);
 	}
+
+// calibraton sensor
+	callab_loop();
 
 //AI Distance-Sensor
 	iDistance = analogRead(iMaxSonar);
