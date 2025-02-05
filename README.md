@@ -1,6 +1,7 @@
 # BD Sensor Modul
 
 ![ESP32](https://img.shields.io/badge/ESP32-grey?logo=Espressif)
+![KiCad](https://img.shields.io/badge/KiCad-grey?logo=KiCad)
 ![Relaise](https://img.shields.io/github/release-date/gerryvel/Bootsdaten?)
 ![lastcommit](https://img.shields.io/github/last-commit/gerryvel/Bootsdaten)
 ![OBP](https://img.shields.io/badge/Sailing_with-OpenBoatsProjects-blue)
