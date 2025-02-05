@@ -1,5 +1,8 @@
 # BD Sensor Modul
 
+![ESP32](https://img.shields.io/badge/ESP32-grey?logo=Espressif)
+![Relaise](https://img.shields.io/github/release-date/gerryvel/Bootsdaten?)
+![lastcommit](https://img.shields.io/github/last-commit/gerryvel/Bootsdaten)
 ![OBP](https://img.shields.io/badge/OpenSailing-OpenBoatsProjects-blue)
 
 The ESP32 in this project is an Adafruit Huzzah! ESP32. This is a small module without USB connector.
