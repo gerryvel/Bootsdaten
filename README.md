@@ -1,4 +1,4 @@
-## BD Sensor Modul
+# BD Sensor Modul
 
 ![OBP](https://img.shields.io/badge/OpenSailing-OpenBoatsProjects-blue)
 
@@ -19,12 +19,12 @@ The HTML Data upload separately with
 - VS-Code > Build Filesystem and Upload Filesystem Image (PlatformIO) 
 from /data directory.
 
-# Physik:
+## Physik:
 
 ![strauch_02_03_035](https://github.com/gerryvel/Bootsdaten/assets/17195231/089ffe03-a30e-45d0-bf36-3a9d06e02bc7)
 
 
-# Partlist:
+## Partlist:
 
 - Adafruit Huzzah! ESP32 (for programming need USB-Adapter)[Link](https://www.exp-tech.de/plattformen/internet-of-things-iot/9350/adafruit-huzzah32-esp32-breakout-board)
 - SN65HVD230 [Link](https://www.reichelt.de/high-speed-can-transceiver-1-mbit-s-3-3-v-so-8-sn-65hvd230d-p58427.html?&trstct=pos_0&nbc=1)
@@ -34,11 +34,11 @@ from /data directory.
 - Resistor 200Ohm , 10kOhm
 
 
-# Wiring diagram
+## Wiring diagram
 
 ![grafik](https://github.com/gerryvel/Bootsdaten/assets/17195231/5571a0f5-8a37-4b18-a9da-5ba11bb2f8b1)
 
-# PCB and Housing assembly
+## PCB and Housing assembly
 
 ![photo_2023-07-20_13-50-08](https://github.com/gerryvel/Bootsdaten/assets/17195231/ef5a9be6-c718-4481-8ee6-a68689e1808c)
 
@@ -46,7 +46,7 @@ from /data directory.
 
 PCB by Aisler [Link](https://aisler.net/p/NZFHAMAJ)
 
-# Webinterface
+## Webinterface
 
 ![image](https://github.com/user-attachments/assets/d4dc4f33-6e58-43d9-b7c4-10e848a5ee16)
 
@@ -56,14 +56,14 @@ PCB by Aisler [Link](https://aisler.net/p/NZFHAMAJ)
 
 ![image](https://github.com/user-attachments/assets/b88cad09-4c7a-4b57-999e-0fbe037e8dbd)
 
-# Plotter
+## Plotter
 
 ![IMG_2314](https://github.com/gerryvel/Bootsdaten/assets/17195231/febcb30e-3672-4694-8fb3-9ba91a55eb29)
 
 ![IMG_2316](https://github.com/gerryvel/Bootsdaten/assets/17195231/5e494e51-6be4-4165-be44-a78ecafa7947)
 
 
-# Versions
+## Versions
 
 - 2.3 Add Pololu MinIMU-9 V5 with Compassmodul, add Website and programm
 - 2.2 Update PCB
