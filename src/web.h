@@ -64,6 +64,8 @@ String replaceVariable(const String& var)
   	if (var == "sCL_Addr")return WiFi.localIP().toString();
   	if (var == "sCL_Status")return String(sCL_Status);
   	if (var == "sI2C_Status")return String(sI2C_Status);
+	if (var == "sI2C_Adress")return I2C_address;
+	if (var == "sOrient")return sOrient;
 	if (var == "sVersion")return Version;
 	if (var == "CONFIGPLACEHOLDER")return processor(var);
   	return "NoVariable";

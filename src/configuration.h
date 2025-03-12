@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 // Versionierung
-#define Version "V2.3 vom 19.11.2024"  // Version
+#define Version "V2.4 vom 12.03.2025"  // Version
 
 // Configuration N2k
 #define ESP32_CAN_TX_PIN GPIO_NUM_4  // Set CAN TX port to 4 
@@ -17,7 +17,7 @@ int i = 0;
 #define PGN1SendOffset 0
 #define PGN2endOffset 40
 #define PGN3SendOffset 80
-#define BPGN4SendOffset 100
+#define PGN4SendOffset 100
 #define SlowDataUpdatePeriod 1000  // Time between CAN Messages sent
 
 //Configuration Web Page 

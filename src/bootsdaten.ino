@@ -37,12 +37,17 @@ bool bMMA_Status = 0;
 //LSM6 & LIS3 Board
 #include <LIS3MDL.h>
 #include <LSM6.h>
-LSM6 gyro;
+#include <Adafruit_LSM6DSOX.h>
+Adafruit_LSM6DSOX lsm;
+//LSM6 gyro
 LIS3MDL mag;
 // LIS3MDL::vector<int16_t> m_min = {-8447, -7151, 11009}, m_max = {6699, 4650, 4685};  // Calibrated
 LIS3MDL::vector<int16_t> m_min = {-32767, -32767, -32767}, m_max = {+32767, +32767, +32767}; // Standard
 bool bGyroMag_Status = 0;
 char report[80];
+
+//OLED
+#include "oled91.h"
 
 //NMEA 0183 Stream
 WiFiUDP udp;  // Create UDP instance
@@ -130,6 +135,11 @@ void setup()
   	Wire.begin(I2C_SDA, I2C_SCL);
   	I2C_scan();
 
+	oledsetup();
+	testdrawbitmap();
+	oledCoursor0(Version);
+	delay(1000);
+
 // Auswahl Sensor: MMA8452 = 0, LSM6M & LIS3 Compass = 1
 		switch (mma.init()) {
 			case 0:
@@ -145,14 +155,17 @@ void setup()
 				bMMA_Status = 1;          
 			}
 
-		switch (gyro.init()) {
+		switch (lsm.begin_I2C()) {
 			case 0:
 				Serial.println("\nGyro LSM6 could not start!");
 				bGyroMag_Status = 0;
 				break;
 			case 1:
 				Serial.println("\nGyro LSM6 found!");	
-				gyro.enableDefault();	
+				lsm.setGyroRange(LSM6DS_GYRO_RANGE_250_DPS);	
+				lsm.setGyroDataRate(LSM6DS_RATE_1_66K_HZ);
+				lsm.setAccelRange(LSM6DS_ACCEL_RANGE_2_G);
+				lsm.setAccelDataRate(LSM6DS_RATE_1_66K_HZ);
 				bGyroMag_Status = 1;        
 			}
 
@@ -171,12 +184,15 @@ void setup()
 // Set I2C Status 
 	if (bGyroMag_Status ==1)
 		sI2C_Status = "Gyro LSM6 aktiv!";
+		oledCoursor10(sI2C_Status);
 		bI2C_Status = 1;
 	if (bMMA_Status ==1)
 		sI2C_Status = "Gyro MMA8452Q aktiv!";
+		oledCoursor10(sI2C_Status);
 		bI2C_Status = 1;
 	if (!bGyroMag_Status && !bMMA_Status)
 		sI2C_Status = "Gyro nicht gefunden!";	
+		oledCoursor10(sI2C_Status);
 
 // calibration setup
 	callab_setup();
@@ -188,15 +204,15 @@ void setup()
 // Boardinfo	
   	sBoardInfo = boardInfo.ShowChipIDtoString();
 
-//WIFI
 	
-	//WiFiServer AP starten
+//WiFiServer AP starten
 	WiFi.mode(WIFI_AP_STA);
 	WiFi.softAP(AP_SSID, AP_PASSWORD);
 	delay(1000);
 	if (WiFi.softAPConfig(IP, Gateway, NMask)){
 		Serial.println("Network " + String(AP_SSID) + " running");	
 		Serial.println("\nNetwork IP " + IP.toString() + " ,GW: " + Gateway.toString() + " ,Mask: " + NMask.toString() + " set");
+		oledCoursor0(IP.toString());
 	}else{
 		Serial.println("IP config not success");	
 	}
@@ -218,17 +234,17 @@ void setup()
 	}
 	Serial.println("mDNS responder started");
 
-	// Start TCP (HTTP) server
+// Start TCP (HTTP) server
 	server.begin();
 	Serial.println("TCP server started\n");
 
-	// Add service to MDNS-SD
+// Add service to MDNS-SD
 	MDNS.addService("http", "tcp", 80);
 
-	//Website
+//Website
 	website();
 
-	// NMEA2000
+// NMEA2000
   	NMEA2000.SetN2kCANMsgBufSize(8);
   	NMEA2000.SetN2kCANReceiveFrameBufSize(250);
   	NMEA2000.SetN2kCANSendFrameBufSize(250);
@@ -236,14 +252,14 @@ void setup()
   	esp_efuse_mac_get_default(chipid);
   	for (i = 0; i < 6; i++) id += (chipid[i] << (7 * i));
 
-  	// Set product information
+// Set product information
   	NMEA2000.SetProductInformation("BD01", // Manufacturer's Model serial code
                                  100, // Manufacturer's product code
                                  "BD Sensor Module",  // Manufacturer's Model ID
                                  "2.0.0.00 (2024-09-30)",  // Manufacturer's Software version code
                                  "1.0.3.0 (2023-09-30)" // Manufacturer's Model version
                                 );
-  	// Set device information
+// Set device information
   	NMEA2000.SetDeviceInformation(01, // Unique number. Use e.g. Serial number.
                                 180, // 180 Device function=Attitude (Pitch, Roll, Yaw) Control. See codes on http://www.nmea.org/Assets/20120726%20nmea%202000%20class%20&%20function%20codes%20v%202.00.pdf
                                 40, // 40 Device class=Steering and Control Surfaces. See codes on  http://www.nmea.org/Assets/20120726%20nmea%202000%20class%20&%20function%20codes%20v%202.00.pdf
@@ -295,7 +311,7 @@ template <typename T> float computeHeading(LIS3MDL::vector<T> from)
   LIS3MDL::vector<int32_t> temp_m = {mag.m.x, mag.m.y, mag.m.z};
 
   // copy acceleration readings from LSM6::vector into an LIS3MDL::vector
-  LIS3MDL::vector<int16_t> a = {gyro.a.x, gyro.a.y, gyro.a.z};
+  LIS3MDL::vector<int16_t> a = {lsm.rawGyroX, lsm.rawGyroY, lsm.rawGyroZ};
 
   // subtract offset (average of min and max) from magnetometer readings
   temp_m.x -= ((int32_t)m_min.x + m_max.x) / 2;
@@ -352,25 +368,34 @@ if (bMMA_Status == 1) {
 	fRollen = mma.getZ() / 11.377;
 	Serial.print("MMA 8452 auslesen:\n");
 	Serial.printf("X, Krängung: %f °\n", fKraengung);
-	Serial.printf("Y, Gieren: %f °\n", fGieren);
-	Serial.printf("Z, Rollen: %f °\n", fRollen);
+	Serial.printf("Y, Gieren  : %f °\n", fGieren);
+	Serial.printf("Z, Rollen  : %f °\n", fRollen);
 	Orientation = mma.readPL();
 }
 
-// read Gyro
-float fGyroTemp = 0;
+
+float fTemperatur = 0.0;
 if (bGyroMag_Status == 1) {
-	gyro.read();
-	Serial.print("Read Gyro LSM6\n");
-	fKraengung = atan2(-gyro.a.x, sqrt(gyro.a.y * gyro.a.y + gyro.a.z * gyro.a.z)) * 180.0 / PI;
+	
+	//gyro.read();      bei der polilo-bib verwenden
+	sensors_event_t accel;
+	sensors_event_t gyro;		// read gyro
+	sensors_event_t temp;
+	lsm.getEvent(&accel, &gyro, &temp);
+
+	fKraengung = atan2(-lsm.rawGyroX, sqrt(lsm.rawGyroY * lsm.rawGyroY + lsm.rawGyroZ * lsm.rawGyroZ)) * 180.0 / PI;
 	fGaugeKraengung = fKraengung;
-	fGieren = atan2(sqrt(gyro.a.y * gyro.a.y + gyro.a.z * gyro.a.z), gyro.a.x) * 180 / PI;
-	fRollen = atan2(gyro.a.y, gyro.a.z) * 180.0 / PI;
+	//fGieren = RadToDeg(gyro.gyro.y);
+	fGieren = atan2(sqrt(lsm.rawGyroY * lsm.rawGyroY + lsm.rawGyroZ * lsm.rawGyroZ), lsm.rawGyroX) * 180 / PI;
+	//fRollen = RadToDeg(gyro.gyro.z);
+	fRollen = atan2(lsm.rawGyroY, lsm.rawGyroZ) * 180.0 / PI;
+	fTemperatur = temp.temperature;
+
 	Serial.print("Gyro LSM6 auslesen:\n");
 	Serial.printf("X, Krängung: %f °\n", fKraengung);
-	Serial.printf("Y, Gieren: %f °\n", fGieren);
-	Serial.printf("Z, Rollen: %f °\n", fRollen);
-	Serial.printf("Temperatur: %f °C\n", fGyroTemp);
+	Serial.printf("Y, Gieren  : %f °\n", fGieren);
+	Serial.printf("Z, Rollen  : %f °\n", fRollen);
+	Serial.printf("Temperatur : %f °\n", fTemperatur);
 }
 
 // Direction Kraengung
@@ -475,16 +500,21 @@ Serial.print("NMEA2000.ParseMessages............\n");
     Serial.read();
   }
 
+// OLED
+//	oledloop();
+
+
 // Website Data	
 	freeHeapSpace();
 	
 	if (IsRebootRequired) {
 		Serial.println("Rebooting ESP32: "); 
+		oledCoursor10("Rebooting ESP32: ");
 		delay(1000); // give time for reboot page to load
 		ESP.restart();
 		}
 
-if ((!mma.isUp()) && (!gyro.init())) bI2C_Status = 0;
+if ((!mma.isUp()) && (!lsm.begin_I2C())) bI2C_Status = 0;
 
 
 }
