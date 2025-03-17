@@ -243,6 +243,7 @@ void setup()
 
 //Website
 	website();
+	// firmware_configure();
 
 // NMEA2000
   	NMEA2000.SetN2kCANMsgBufSize(8);

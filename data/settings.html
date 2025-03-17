@@ -11,7 +11,7 @@
     <br />
     <p class="label">Kieloffset: Abstand Wasserlinie und Kiel</p>
     <p class="label">Aktueller Tiefgang: %sAbsTief% cm</p>
-    <p class="CInput">Neue Daten:</br>
+    <p class="CInput">Neue Daten:</p>
     %CONFIGPLACEHOLDER%
     <script>
         function formToJson(form) {
@@ -33,11 +33,11 @@
             xhr.send();
         }
     </script>
-    </p> 
+     
     <p class="label">Nach &Auml;nderungen neu starten!</p>
     
     <button class="button" onclick="reboot_handler()">Neustart</button>
-    </p>
+   
 
     <p id="status"></p>
     <script>
@@ -57,6 +57,7 @@
         <li><a href="compass.html">Kompass</a></li>
         <li><a class="active" href="settings.html">Settings</a></li>
         <li><a href="system.html">System</a></li>
+        <li><a href="firmware.html">Firmware</a></li>
         <li class="right"><a href="ueber.html">About</a></li>
     </ul>
 </body>

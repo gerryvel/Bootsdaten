@@ -3,10 +3,10 @@
 
 #include <arduino.h>
 #include "BoardInfo.h"
-#include "configuration.h"
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 #include "helper.h"
+#include "async_server.h"
 
 // Set web server port number to 80
 AsyncWebServer server(80);
@@ -67,11 +67,14 @@ String replaceVariable(const String& var)
 	if (var == "sI2C_Adress")return I2C_address;
 	if (var == "sOrient")return sOrient;
 	if (var == "sVersion")return Version;
+	if (var == "BUILD_TIMESTAMP")return String(__DATE__) + " " + String(__TIME__);
 	if (var == "CONFIGPLACEHOLDER")return processor(var);
   	return "NoVariable";
 }
 
 void website(){
+	server.onNotFound(server_not_found);
+	server.onFileUpload(server_handle_upload);
 	server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request){
 		request->send(LittleFS, "/favicon.ico", "image/x-icon");
 		});
@@ -84,6 +87,48 @@ void website(){
 	server.on("/system.html", HTTP_GET, [](AsyncWebServerRequest* request) {
 			request->send(LittleFS, "/system.html", String(), false, replaceVariable);
 		});
+	server.on("/firmware.html", HTTP_GET, [](AsyncWebServerRequest* request) {
+			request->send(LittleFS, "/firmware.html", String(), false, replaceVariable);
+		});	
+	server.on("/directory", HTTP_GET, [](AsyncWebServerRequest* request) {
+			request->send(200, "text/plain", server_directory(true));
+		});	
+	server.on("/file", HTTP_GET, [](AsyncWebServerRequest* request) {
+		if (request->hasParam("name") && request->hasParam("action")) {
+			const char *fileName = request->getParam("name")->value().c_str();
+			const char *fileAction = request->getParam("action")->value().c_str();
+	
+			if (!LittleFS.exists(fileName)) {
+			  request->send(400, "text/plain", "ERROR: file does not exist");
+			  } 
+			else {
+			  if (strcmp(fileAction, "download") == 0) {
+				LittleFSFile = LittleFS.open(fileName, "r");
+				int sizeBytes = LittleFSFile.size();
+				Serial.println("large file, chunked download required");
+				AsyncWebServerResponse *response = request->beginResponse("application/octet-stream", sizeBytes, [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
+				  return littleFS_chunked_read(buffer, maxLen);
+				  });
+				char szBuf[80];
+				sprintf(szBuf, "attachment; filename=%s", &fileName[1]);// get past the leading '/'
+				response->addHeader("Content-Disposition", szBuf);
+				response->addHeader("Connection", "close");
+				request->send(response);
+				} 
+			  else 
+			  if (strcmp(fileAction, "delete") == 0) {
+				LittleFS.remove(fileName);
+				request->send(200, "text/plain", "Deleted File: " + String(fileName));
+				} 
+			  else {
+				request->send(400, "text/plain", "ERROR: invalid action param supplied");
+				}
+			  }
+		  } 
+		else {
+		  request->send(400, "text/plain", "ERROR: name and action params required");
+		  }
+		}); 
 	server.on("/settings.html", HTTP_GET, [](AsyncWebServerRequest* request) {
 			request->send(LittleFS, "/settings.html", String(), false, replaceVariable);
 		});
