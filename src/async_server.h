@@ -8,22 +8,10 @@
 // https://randomnerdtutorials.com/esp32-web-server-spiffs-spi-flash-file-system/
 
 
-typedef struct LOGON_CONFIG_ {
-  String httpuser;           // username to access web admin
-  String httppassword;       // password to access web admin
-} LOGON_CONFIG;
-
-// AsyncWebServer *server = NULL;  
-
-const String default_httpuser = "admin";
-const String default_httppassword = "admin";
-
-static LOGON_CONFIG config;
 static File LittleFSFile;
 
 static String server_directory(bool ishtml = false);
 static void server_not_found(AsyncWebServerRequest *request);
-static bool server_authenticate(AsyncWebServerRequest * request);
 static void server_handle_upload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
 static void server_handle_littleFS_upload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
 static String server_string_processor(const String& var);
@@ -71,28 +59,6 @@ static String server_ui_size(const size_t bytes) {
   else return String(bytes / 1024.0 / 1024.0 / 1024.0) + " GB";
   }
 
- 
-// replace %SOMETHING%  in webpage with dynamically generated string
-/*static String server_string_processor(const String& var) {
-    if (var == "BUILD_TIMESTAMP") {
-        return String(__DATE__) + " " + String(__TIME__); 
-        }
-    else
-    if (var == "FREELittleFS") {
-        return server_ui_size((LittleFS.totalBytes() - LittleFS.usedBytes()));
-        }
-    else
-    if (var == "USEDLittleFS") {
-        return server_ui_size(LittleFS.usedBytes());
-        }
-    else
-    if (var == "TOTALLittleFS") {
-        return server_ui_size(LittleFS.totalBytes());
-        }
-    else
-        return "?";
-    }
-*/
 
 static int littleFS_chunked_read(uint8_t* buffer, int maxLen) {              
   //Serial.printf("MaxLen = %d\n", maxLen);
@@ -110,113 +76,7 @@ static int littleFS_chunked_read(uint8_t* buffer, int maxLen) {
     }
 }
 
-/*
-void firmware_configure() {
-  // if url isn't found
-  server.onNotFound(server_not_found);
 
-  // run handleUpload function when any file is uploaded
-  server.onFileUpload(server_handle_upload);
-
-  // visiting this page will cause you to be logged out
-  server.on("/logout", HTTP_GET, [](AsyncWebServerRequest * request) {
-    request->requestAuthentication();
-    request->send(LittleFS, "/index.html", String(), false, server_string_processor);
-  });
-
-  // presents a "you are now logged out webpage
-  server.on("/logged-out", HTTP_GET, [](AsyncWebServerRequest * request) {
-    String logmessage = "Client:" + request->client()->remoteIP().toString() + " " + request->url();
-    Serial.println(logmessage);
-    request->send(LittleFS, "/index.html", String(), false, server_string_processor);
-  });
-
-  server.on("/firmware", HTTP_GET, [](AsyncWebServerRequest * request) {
-    String logmessage = "Client:" + request->client()->remoteIP().toString() + + " " + request->url();
-    if (server_authenticate(request)) {
-      logmessage += " Auth: Success";
-      Serial.println(logmessage);
-      request->send(LittleFS, "/firmware.html", String(), false, server_string_processor);
-    } else {
-      logmessage += " Auth: Failed";
-      Serial.println(logmessage);
-      return request->requestAuthentication();
-    }
-  });
-
-
-
-  server.on("/directory", HTTP_GET, [](AsyncWebServerRequest * request)  {
-    String logmessage = "Client:" + request->client()->remoteIP().toString() + " " + request->url();
-    if (server_authenticate(request)) {
-      logmessage += " Auth: Success";
-      Serial.println(logmessage);
-      request->send(200, "text/plain", server_directory(true));
-    } else {
-      logmessage += " Auth: Failed";
-      Serial.println(logmessage);
-      return request->requestAuthentication();
-    }
-  });
-
-
-  server.on("/file", HTTP_GET, [](AsyncWebServerRequest * request) {
-    String logmessage = "Client:" + request->client()->remoteIP().toString() + " " + request->url();
-    if (server_authenticate(request)) {
-      logmessage += " Auth: Success";
-      Serial.println(logmessage);
-
-      if (request->hasParam("name") && request->hasParam("action")) {
-        const char *fileName = request->getParam("name")->value().c_str();
-        const char *fileAction = request->getParam("action")->value().c_str();
-
-        logmessage = "Client:" + request->client()->remoteIP().toString() + " " + request->url() + "?name=" + String(fileName) + "&action=" + String(fileAction);
-
-        if (!LittleFS.exists(fileName)) {
-          Serial.println(logmessage + " ERROR: file does not exist");
-          request->send(400, "text/plain", "ERROR: file does not exist");
-          } 
-        else {
-          Serial.println(logmessage + " file exists");
-          if (strcmp(fileAction, "download") == 0) {
-            logmessage += " downloaded";
-            LittleFSFile = LittleFS.open(fileName, "r");
-            int sizeBytes = LittleFSFile.size();
-            Serial.println("large file, chunked download required");
-            AsyncWebServerResponse *response = request->beginResponse("application/octet-stream", sizeBytes, [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
-              return littleFS_chunked_read(buffer, maxLen);
-              });
-            char szBuf[80];
-            sprintf(szBuf, "attachment; filename=%s", &fileName[1]);// get past the leading '/'
-            response->addHeader("Content-Disposition", szBuf);
-            response->addHeader("Connection", "close");
-            request->send(response);
-            } 
-          else 
-          if (strcmp(fileAction, "delete") == 0) {
-            logmessage += " deleted";
-            LittleFS.remove(fileName);
-            request->send(200, "text/plain", "Deleted File: " + String(fileName));
-            } 
-          else {
-            logmessage += " ERROR: invalid action param supplied";
-            request->send(400, "text/plain", "ERROR: invalid action param supplied");
-            }
-          Serial.println(logmessage);
-          }
-      } 
-    else {
-      request->send(400, "text/plain", "ERROR: name and action params required");
-      }
-    } 
-  else {
-    logmessage += " Auth: Failed";
-    Serial.println(logmessage);
-    return request->requestAuthentication();
-    }
-  });
-}
-*/
 #if 0
 void read_file_chunk(uint8_t* buffer, int maxlen) {
       int bytesRemaining = (int)(FlashLogFreeAddress - flashAddr);
@@ -240,18 +100,6 @@ static void server_not_found(AsyncWebServerRequest *request) {
   Serial.println(logmessage);
   request->send(404, "text/plain", "Not found");
   }
-  
-// used by server.on functions to discern whether a user has the correct httpapitoken OR is authenticated by username and password
-bool server_authenticate(AsyncWebServerRequest * request) {
-  bool isAuthenticated = false;
-
-  if (request->authenticate(config.httpuser.c_str(), config.httppassword.c_str())) {
-    Serial.println("is authenticated via username and password");
-    isAuthenticated = true;
-  }
-  return isAuthenticated;
-}
-
 
 static void server_handle_upload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
     if (filename.endsWith(".bin") ) {
@@ -297,11 +145,9 @@ static void server_handle_littleFS_upload(AsyncWebServerRequest *request, String
   }
 
 
-
 // handles OTA firmware update
 static void server_handle_OTA_update(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
   // make sure authenticated before allowing upload
-  if (server_authenticate(request)) {
     String logmessage = "Client:" + request->client()->remoteIP().toString() + " " + request->url();
     Serial.println(logmessage);
 
@@ -332,11 +178,8 @@ static void server_handle_OTA_update(AsyncWebServerRequest *request, String file
           }
       request->redirect("/");
       }
-  } else {
-    Serial.println("Auth: Failed");
-    return request->requestAuthentication();
   }
-}
+
 
 inline int littlefs_chunked_read(uint8_t *buffer, int maxLen)
 {
