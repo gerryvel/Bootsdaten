@@ -1,15 +1,15 @@
 <!DOCTYPE HTML>
 <head>
+  <title>Firmware</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta charset="UTF-8">
   <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-  <title>Firmware</title>
+  <p class="label">Firmware</p>
   <p>Build Time Stamp: %BUILD_TIMESTAMP%</p>
   <p>LittleFS Speicher : <span id="totalLittleFS">%sFS_TSpace%</span> | Benutzt : <span id="usedLittleFS">%sFS_USpace%</span></p>
   <p>
-  <button class='button' onclick="logout_handler()">Logout</button>
   <button class='button' onclick="reboot_handler()">Reboot</button>
   <button class='button' onclick="directory_handler()">Directory</button>
   <button class='button' onclick="upload_handler()">Upload</button>
