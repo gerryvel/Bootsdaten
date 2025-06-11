@@ -182,7 +182,7 @@ void callab_loop() {
     return;
   }
   // 'Raw' values to match expectation of MOtionCal
-  Serial.print("Raw:");
+  Serial.print("\nRaw:");
   Serial.print(int(accel_event.acceleration.x*8192/9.8)); Serial.print(",");
   Serial.print(int(accel_event.acceleration.y*8192/9.8)); Serial.print(",");
   Serial.print(int(accel_event.acceleration.z*8192/9.8)); Serial.print(",");

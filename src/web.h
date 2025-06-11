@@ -58,7 +58,6 @@ String replaceVariable(const String& var)
 	if (var == "sBoardInfo")return sBoardInfo;
 	if (var == "sFS_USpace")return String(LittleFS.usedBytes());
 	if (var == "sFS_TSpace")return String(LittleFS.totalBytes());
-	if (var == "sAP_IP")return String(tWeb_Config.wAP_IP);
   	if (var == "sAP_Clients")return String(WiFi.softAPgetStationNum());
 	if (var == "sAP_IP")return WiFi.softAPIP().toString();
   	if (var == "sCL_Addr")return WiFi.localIP().toString();

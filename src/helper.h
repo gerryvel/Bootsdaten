@@ -8,6 +8,7 @@
 #include <LITTLEFS.h>
 #include <FS.h>
 #include <Wire.h>
+#include <ESP_WiFi.h>
 #include "configuration.h"
 #include <ArduinoJson.h>
 #include <Preferences.h>
@@ -119,7 +120,6 @@ void readConfig(String filename) {
 			strcpy(tWeb_Config.wAP_IP, testDocument["IP"] | "192.168.16.1");
 			strcpy(tWeb_Config.wAP_Password, testDocument["Password"] | "12345678");
 			strcpy(tWeb_Config.wKiel_Offset, testDocument["Kiel_Offset"] | "70.0");
-			Serial.println(tWeb_Config.wAP_SSID);
 		}
 		configFile.close();
 		Serial.println("Config - Datei geschlossen");

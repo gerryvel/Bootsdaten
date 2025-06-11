@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 // Versionierung
-#define Version "V2.4 vom 12.03.2025"  // Version
+#define Version "V2.4 vom 10.06.2025"  // Version
 
 // Configuration N2k
 #define ESP32_CAN_TX_PIN GPIO_NUM_4  // Set CAN TX port to 4 
@@ -70,15 +70,15 @@ int I2C_Typ = 0;
 String I2C_address = "";
 
 // Bootsdaten > Krängung etc
-double fKraengung = 0;				//MMA
-float fGaugeKraengung = 0;
-double fGieren = 0;
-double fRollen = 0;
-String sSTBB = "";
-String sOrient = "";
+double fKraengung = 0;			//Pitch
+float fGaugeKraengung = 0;		//Pitch fo Instrument
+double fGieren = 0;				//Yaw
+double fRollen = 0;				//Roll
+String sSTBB = "";				//Backbord oder Steuerbord
+String sOrient = "";			//Orientation
 
-float fheading = 0;					//Compass
-float fheadingRad = 0;
+float fheading = 0;				//Compass
+float fheadingRad = 0;			//Compass in Radian
 
 const int iMaxSonar = 35;			//Analoginput 
 int iDistance = 0;
@@ -88,8 +88,8 @@ float fKielOffset = 0;
 
 
 //Definiton NMEA0183 MWV
-double dMWV_WindDirectionT = 0;
-double dMWV_WindSpeedM = 0;
+double dMWV_WindDirectionT = 0;		//Wind Direction True
+double dMWV_WindSpeedM = 0;			//wWnd Speed in m/s
 double dVWR_WindDirectionM = 0;
 double dVWR_WindAngle = 0;
 double dVWR_WindSpeedkn = 0;
