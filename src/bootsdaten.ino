@@ -25,6 +25,7 @@
 #include <NMEA2000.h>
 #include <N2kMessages.h>
 #include "NMEA0183Telegram.h"
+#include "Compass.h"
 
 // NMEA2000
 Preferences preferences;             // Nonvolatile storage on ESP32 - To store LastDeviceAddress
@@ -221,7 +222,7 @@ void setup()
     Serial.println("IP config not success");	
   }
 
-  if (!WiFi.setHostname(HostName))
+  if (WiFi.setHostname(HostName))
     Serial.println("\nSet Hostname success");
   else
     Serial.println("\nSet Hostname not success");
@@ -442,8 +443,29 @@ void loop()
       m_min.x, m_min.y, m_min.z,
       m_max.x, m_max.y, m_max.z);
     Serial.println(report);
+  }
 
+  if((millis()-timer)>=20)  // Main loop runs at 50Hz
+  {
+    counter++;
+    timer_old = timer;
+    timer=millis();
+    if (timer>timer_old)
+    {
+      G_Dt = (timer-timer_old)/1000.0;    // Real time of loop run. We use this on the DCM algorithm (gyro integration time)
+      if (G_Dt > 0.2)
+        G_Dt = 0; // ignore integration times over 200 ms
+    }
+    else
+      G_Dt = 0;
+  }
+
+  if (counter > 5){  // Read compass data at 10Hz... (5 loop runs)
+   counter = 0;
+
+   Compass_Heading(fRollen, fKraengung, mag.m.x, mag.m.y, mag.m.z);
     fheading = computeHeading((LIS3MDL::vector<int>){1, 1, 1});
+    //fheading = RadToDeg(MAG_Heading);
     fheadingRad = DegToRad(fheading);
     Serial.printf("Heading (Grad): %f °\n", fheading);
     Serial.printf("Heading (Radian): %f °\n", fheadingRad);

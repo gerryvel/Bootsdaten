@@ -80,6 +80,12 @@ String sOrient = "";			//Orientation
 float fheading = 0;				//Compass
 float fheadingRad = 0;			//Compass in Radian
 
+float G_Dt=0.02;    // Integration time (DCM algorithm)  We will run the integration loop at 50Hz if possible
+
+long timer = 0;   //general purpuse timer
+long timer_old;
+unsigned int counter = 0;
+
 const int iMaxSonar = 35;			//Analoginput 
 int iDistance = 0;
 float fSStellung = 0;
